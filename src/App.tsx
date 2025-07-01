@@ -5,7 +5,7 @@ import { POS } from '@/pages/POS';
 import { Inventory } from '@/pages/Inventory';
 import { Products } from '@/pages/Products';
 import { Reports } from '@/pages/Reports';
-//import { Users } from '@/pages/Users';
+import { Users } from '@/pages/Users';
 import { Settings } from '@/pages/Settings';
 //import { Notifications } from '@/pages/Notifications';
 //import { Reception } from '@/pages/Reception';
@@ -24,7 +24,7 @@ function App() {
           {/* <Route path="inventory/reception" element={<Reception />} /> */}
           <Route path="products" element={<Products />} />
           <Route path="reports" element={<Reports />} />
-          {/* <Route path="users" element={<Users />} /> */}
+          <Route path="users" element={<Users />} />
           <Route path="settings" element={<Settings />} />
           {/* <Route path="notifications" element={<Notifications />} /> */}
         </Route>

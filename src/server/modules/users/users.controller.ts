@@ -18,19 +18,97 @@ export class UserController {
         orderBy: { nombre: 'asc' }
       });
 
-      res.json(users);
+      // Get additional stats for each user
+      const usersWithStats = await Promise.all(
+        users.map(async (user) => {
+          const [ventasCount, lastActivity] = await Promise.all([
+            prisma.venta.count({
+              where: { usuarioId: user.usuarioId }
+            }),
+            prisma.historialCambio.findFirst({
+              where: { usuarioId: user.usuarioId },
+              orderBy: { fechaCambio: 'desc' }
+            })
+          ]);
+
+          return {
+            ...user,
+            ventasCount,
+            ultimoAcceso: lastActivity?.fechaCambio
+          };
+        })
+      );
+
+      res.json(usersWithStats);
     } catch (error) {
       console.error('Error getting users:', error);
       res.status(500).json({ message: 'Error al obtener usuarios' });
     }
   };
 
+  getUserStats = async (req: AuthRequest, res: Response) => {
+    try {
+      const [total, active, administrators, cashiers, inventory] = await Promise.all([
+        prisma.usuario.count(),
+        prisma.usuario.count({ where: { activo: true } }),
+        prisma.usuario.count({ where: { rol: 'administrador' } }),
+        prisma.usuario.count({ where: { rol: 'cajero' } }),
+        prisma.usuario.count({ where: { rol: 'inventario' } })
+      ]);
+
+      res.json({
+        total,
+        active,
+        administrators,
+        cashiers,
+        inventory
+      });
+    } catch (error) {
+      console.error('Error getting user stats:', error);
+      res.status(500).json({ message: 'Error al obtener estadísticas de usuarios' });
+    }
+  };
+
+  getUserActivity = async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { limit = 50 } = req.query;
+
+      const activities = await prisma.historialCambio.findMany({
+        where: { usuarioId: Number(id) },
+        orderBy: { fechaCambio: 'desc' },
+        take: Number(limit)
+      });
+
+      res.json(activities);
+    } catch (error) {
+      console.error('Error getting user activity:', error);
+      res.status(500).json({ message: 'Error al obtener actividad del usuario' });
+    }
+  };
+
   createUser = async (req: AuthRequest, res: Response) => {
     try {
-      const { nombre, correo, contrasena, rol } = req.body;
+      const { nombre, correo, contrasena, rol, activo = true } = req.body;
 
       if (!nombre || !correo || !contrasena || !rol) {
         return res.status(400).json({ message: 'Todos los campos son requeridos' });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(correo)) {
+        return res.status(400).json({ message: 'El formato del correo no es válido' });
+      }
+
+      // Validate password length
+      if (contrasena.length < 6) {
+        return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+      }
+
+      // Validate role
+      if (!['administrador', 'cajero', 'inventario'].includes(rol)) {
+        return res.status(400).json({ message: 'Rol no válido' });
       }
 
       const existingUser = await prisma.usuario.findUnique({
@@ -45,10 +123,11 @@ export class UserController {
 
       const user = await prisma.usuario.create({
         data: {
-          nombre,
-          correo: correo.toLowerCase(),
+          nombre: nombre.trim(),
+          correo: correo.toLowerCase().trim(),
           contrasenaHash: hashedPassword,
-          rol
+          rol,
+          activo
         },
         select: {
           usuarioId: true,
@@ -65,7 +144,11 @@ export class UserController {
         data: {
           usuarioId: req.user!.usuarioId,
           accion: `Usuario creado: ${user.nombre}`,
-          detalles: { usuarioCreado: user.usuarioId, rol: user.rol }
+          detalles: { 
+            usuarioCreado: user.usuarioId, 
+            rol: user.rol,
+            correo: user.correo 
+          }
         }
       });
 
@@ -81,18 +164,67 @@ export class UserController {
       const { id } = req.params;
       const { nombre, correo, rol, activo, contrasena } = req.body;
 
+      const userId = Number(id);
+      
+      // Check if user exists
+      const existingUser = await prisma.usuario.findUnique({
+        where: { usuarioId: userId }
+      });
+
+      if (!existingUser) {
+        return res.status(404).json({ message: 'Usuario no encontrado' });
+      }
+
+      // Prevent self-deactivation
+      if (req.user!.usuarioId === userId && activo === false) {
+        return res.status(400).json({ message: 'No puedes desactivar tu propia cuenta' });
+      }
+
       const updateData: any = {};
       
-      if (nombre) updateData.nombre = nombre;
-      if (correo) updateData.correo = correo.toLowerCase();
-      if (rol) updateData.rol = rol;
-      if (typeof activo === 'boolean') updateData.activo = activo;
+      if (nombre) {
+        updateData.nombre = nombre.trim();
+      }
+      
+      if (correo) {
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(correo)) {
+          return res.status(400).json({ message: 'El formato del correo no es válido' });
+        }
+
+        // Check if email is already taken by another user
+        const emailExists = await prisma.usuario.findFirst({
+          where: { 
+            correo: correo.toLowerCase().trim(),
+            usuarioId: { not: userId }
+          }
+        });
+
+        if (emailExists) {
+          return res.status(400).json({ message: 'El correo ya está en uso por otro usuario' });
+        }
+
+        updateData.correo = correo.toLowerCase().trim();
+      }
+      
+      if (rol && ['administrador', 'cajero', 'inventario'].includes(rol)) {
+        updateData.rol = rol;
+      }
+      
+      if (typeof activo === 'boolean') {
+        updateData.activo = activo;
+      }
+      
       if (contrasena) {
+        if (contrasena.length < 6) {
+          return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+        }
         updateData.contrasenaHash = await bcrypt.hash(contrasena, 12);
       }
 
       const user = await prisma.usuario.update({
-        where: { usuarioId: Number(id) },
+        where: { usuarioId: userId },
         data: updateData,
         select: {
           usuarioId: true,
@@ -109,7 +241,10 @@ export class UserController {
         data: {
           usuarioId: req.user!.usuarioId,
           accion: `Usuario actualizado: ${user.nombre}`,
-          detalles: { usuarioActualizado: user.usuarioId, cambios: updateData }
+          detalles: { 
+            usuarioActualizado: user.usuarioId, 
+            cambios: Object.keys(updateData)
+          }
         }
       });
 
@@ -123,13 +258,14 @@ export class UserController {
   deleteUser = async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
+      const userId = Number(id);
 
-      if (Number(id) === req.user!.usuarioId) {
+      if (userId === req.user!.usuarioId) {
         return res.status(400).json({ message: 'No puedes desactivar tu propia cuenta' });
       }
 
       const user = await prisma.usuario.update({
-        where: { usuarioId: Number(id) },
+        where: { usuarioId: userId },
         data: { activo: false },
         select: {
           usuarioId: true,
