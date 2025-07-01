@@ -9,5 +9,7 @@ router.use(authenticateToken);
 
 router.get('/', settingsController.getSettings);
 router.put('/', authorizeRole(['administrador']), settingsController.updateSettings);
+router.post('/reset', authorizeRole(['administrador']), settingsController.resetSettings);
+router.get('/export', authorizeRole(['administrador']), settingsController.exportSettings);
 
 export { router as settingsRoutes };

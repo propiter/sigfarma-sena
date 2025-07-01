@@ -229,9 +229,11 @@ export function Layout() {
           </div>
         </div>
 
-        {/* Page content */}
+        {/* Page content with responsive container */}
         <main className="min-h-[calc(100vh-4rem)] bg-background theme-transition">
-          <Outlet />
+          <div className="w-full max-w-[1600px] mx-auto">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

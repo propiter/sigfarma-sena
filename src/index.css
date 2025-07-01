@@ -72,22 +72,49 @@
     @apply bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white font-medium px-6 py-2 rounded-lg transition-colors duration-200;
   }
 
-  /* Responsive utilities */
+  /* Responsive container system */
   .container-responsive {
-    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12;
   }
 
+  .container-narrow {
+    @apply w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-wide {
+    @apply w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-16;
+  }
+
+  /* Grid responsive utilities */
   .grid-responsive {
     @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6;
   }
 
+  .grid-responsive-2 {
+    @apply grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6;
+  }
+
+  .grid-responsive-3 {
+    @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6;
+  }
+
+  /* Card responsive utilities */
   .card-responsive {
-    @apply p-4 sm:p-6;
+    @apply p-4 sm:p-6 lg:p-8;
+  }
+
+  .card-compact {
+    @apply p-3 sm:p-4 lg:p-6;
   }
 
   /* Dark mode transitions */
   .theme-transition {
     @apply transition-colors duration-200 ease-in-out;
+  }
+
+  /* Optimal content width for readability */
+  .content-width {
+    @apply max-w-none lg:max-w-[1400px] xl:max-w-[1600px];
   }
 }
 
@@ -114,6 +141,23 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--foreground));
   }
+
+  /* Responsive text utilities */
+  .text-responsive {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+
+  .text-responsive-sm {
+    @apply text-xs sm:text-sm lg:text-base;
+  }
+
+  .heading-responsive {
+    @apply text-xl sm:text-2xl lg:text-3xl xl:text-4xl;
+  }
+
+  .heading-responsive-sm {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
 }
 
 /* Animation improvements */
@@ -132,7 +176,7 @@
   animation: fadeIn 0.3s ease-out;
 }
 
-/* Mobile-first responsive breakpoints */
+/* Responsive breakpoint utilities */
 @media (max-width: 640px) {
   .mobile-stack {
     @apply flex-col space-y-2;
@@ -140,6 +184,22 @@
   
   .mobile-full {
     @apply w-full;
+  }
+
+  .mobile-hide {
+    @apply hidden;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .tablet-optimize {
+    @apply px-6 py-4;
+  }
+}
+
+@media (min-width: 1024px) {
+  .desktop-optimize {
+    @apply px-8 py-6;
   }
 }
 
@@ -151,5 +211,12 @@
   
   .print-break {
     page-break-after: always;
+  }
+}
+
+/* Focus improvements for accessibility */
+@layer utilities {
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800;
   }
 }
