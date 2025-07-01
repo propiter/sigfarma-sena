@@ -88,7 +88,7 @@ export function Layout() {
   );
 
   return (
-    <div className="min-h-screen bg-background theme-transition">
+    <div className="min-h-screen bg-background theme-transition flex">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -96,12 +96,12 @@ export function Layout() {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-
+      
       {/* Sidebar */}
       <div className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border shadow-lg transform transition-transform duration-300 ease-in-out theme-transition
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:inset-0
+        lg:translate-x-0 lg:static lg:inset-0 lg:flex-shrink-0
       `}>
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -194,7 +194,7 @@ export function Layout() {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="flex-1 flex flex-col min-h-screen">
         {/* Top bar */}
         <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8 bg-card border-b border-border theme-transition">
           <Button
@@ -230,8 +230,8 @@ export function Layout() {
         </div>
 
         {/* Page content with responsive container */}
-        <main className="min-h-[calc(100vh-4rem)] bg-background theme-transition">
-          <div className="w-full max-w-[1600px] mx-auto">
+        <main className="flex-1 overflow-y-auto bg-background theme-transition">
+          <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6">
             <Outlet />
           </div>
         </main>
