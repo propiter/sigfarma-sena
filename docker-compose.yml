@@ -27,7 +27,7 @@ services:
       database:
         condition: service_healthy
     environment:
-      DATABASE_URL: "postgresql://postgres:password@database:5432/sigfarma_sena"
+      DATABASE_URL: "postgresql://postgres:postgres@database:5432/sigfarma_sena"
       NODE_ENV: production
       JWT_SECRET: "your-super-secret-jwt-key-change-in-production"
       JWT_EXPIRES_IN: "7d"
