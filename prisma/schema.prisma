@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Configuracion {
+  clave       String @id @db.VarChar(50)
+  valor       String
+  descripcion String
+  tipoDato    String @map("tipo_dato") @db.VarChar(20)
+
+  @@map("configuracion")
+}
+
+model Usuario {
+  usuarioId       Int      @id @default(autoincrement()) @map("usuario_id")
+  nombre          String   @db.VarChar(100)
+  correo          String   @unique @db.VarChar(100)
+  contrasenaHash  String   @map("contrasena_hash") @db.VarChar(255)
+  rol             Rol
+  activo          Boolean  @default(true)
+  fechaCreacion   DateTime @default(now()) @map("fecha_creacion")
+
+  // Relations
+  ventas          Venta[]
+  actasRecepcion  ActaRecepcion[] @relation("UsuarioReceptor")
+  historialCambios HistorialCambio[]
+
+  @@map("usuarios")
+}
+
+model Proveedor {
+  proveedorId Int      @id @default(autoincrement()) @map("proveedor_id")
+  nombre      String   @unique @db.VarChar(150)
+  nit         String?  @unique @db.VarChar(20)
+  contacto    String?  @db.VarChar(100)
+  telefono    String?  @db.VarChar(50)
+  correo      String?  @db.VarChar(100)
+  direccion   String?
+  activo      Boolean  @default(true)
+
+  // Relations
+  actasRecepcion ActaRecepcion[]
+
+  @@map("proveedores")
+}
+
+model Producto {
+  productoId             Int      @id @default(autoincrement()) @map("producto_id")
+  codigoBarras           String?  @unique @map("codigo_barras") @db.VarChar(50)
+  nombre                 String   @db.VarChar(150)
+  principioActivo        String?  @map("principio_activo") @db.VarChar(150)
+  concentracion          String?  @db.VarChar(50)
+  formaFarmaceutica      String?  @map("forma_farmaceutica") @db.VarChar(50)
+  presentacion           String   @db.VarChar(100)
+  laboratorio            String?  @db.VarChar(100)
+  registroSanitario      String?  @map("registro_sanitario") @db.VarChar(50)
+  requiereRefrigeracion  Boolean  @default(false) @map("requiere_refrigeracion")
+  esControlado           Boolean  @default(false) @map("es_controlado")
+  stockTotal             Int      @default(0) @map("stock_total")
+  stockMinimo            Int      @default(5) @map("stock_minimo")
+  precioVentaSugerido    Decimal  @map("precio_venta_sugerido") @db.Decimal(12, 2)
+  aplicaIva              Boolean  @default(true) @map("aplica_iva")
+  activo                 Boolean  @default(true)
+  fechaCreacion          DateTime @default(now()) @map("fecha_creacion")
+
+  // Relations
+  lotes                  Lote[]
+  detalleActaRecepcion   DetalleActaRecepcion[]
+
+  @@index([nombre])
+  @@map("productos")
+}
+
+model Lote {
+  loteId              Int      @id @default(autoincrement()) @map("lote_id")
+  productoId          Int      @map("producto_id")
+  numeroLote          String   @map("numero_lote") @db.VarChar(50)
+  fechaVencimiento    DateTime @map("fecha_vencimiento") @db.Date
+  cantidadInicial     Int      @map("cantidad_inicial")
+  cantidadDisponible  Int      @map("cantidad_disponible")
+  precioCompra        Decimal  @map("precio_compra") @db.Decimal(12, 2)
+  precioVentaLote     Decimal  @map("precio_venta_lote") @db.Decimal(12, 2)
+  fechaIngreso        DateTime @default(now()) @map("fecha_ingreso")
+
+  // Relations
+  producto            Producto @relation(fields: [productoId], references: [productoId], onDelete: Cascade)
+  detalleVenta        DetalleVenta[]
+  detalleActaRecepcion DetalleActaRecepcion[] @relation("LoteCreado")
+
+  @@unique([productoId, numeroLote])
+  @@index([fechaVencimiento])
+  @@map("lotes")
+}
+
+model ActaRecepcion {
+  actaId              Int      @id @default(autoincrement()) @map("acta_id")
+  proveedorId         Int      @map("proveedor_id")
+  usuarioReceptorId   Int      @map("usuario_receptor_id")
+  ordenCompraId       Int?     @map("orden_compra_id")
+  numeroFactura       String?  @map("numero_factura") @db.VarChar(50)
+  fechaRecepcion      DateTime @default(now()) @map("fecha_recepcion")
+  observaciones       String?
+  estado              EstadoActa @default(EnProceso)
+
+  // Relations
+  proveedor           Proveedor @relation(fields: [proveedorId], references: [proveedorId])
+  usuarioReceptor     Usuario   @relation("UsuarioReceptor", fields: [usuarioReceptorId], references: [usuarioId])
+  detalleActaRecepcion DetalleActaRecepcion[]
+
+  @@map("actas_recepcion")
+}
+
+model DetalleActaRecepcion {
+  detalleActaId              Int      @id @default(autoincrement()) @map("detalle_acta_id")
+  actaId                     Int      @map("acta_id")
+  productoId                 Int      @map("producto_id")
+  numeroLoteRecibido         String   @map("numero_lote_recibido") @db.VarChar(50)
+  fechaVencimientoRecibida   DateTime @map("fecha_vencimiento_recibida") @db.Date
+  cantidadRecibida           Int      @map("cantidad_recibida")
+  precioCompraRecibido       Decimal  @map("precio_compra_recibido") @db.Decimal(12, 2)
+  loteCreadoId               Int?     @map("lote_creado_id")
+
+  // Relations
+  acta                       ActaRecepcion @relation(fields: [actaId], references: [actaId], onDelete: Cascade)
+  producto                   Producto @relation(fields: [productoId], references: [productoId])
+  loteCreado                 Lote? @relation("LoteCreado", fields: [loteCreadoId], references: [loteId])
+
+  @@map("detalle_acta_recepcion")
+}
+
+model Venta {
+  ventaId         Int      @id @default(autoincrement()) @map("venta_id")
+  usuarioId       Int      @map("usuario_id")
+  fechaVenta      DateTime @default(now()) @map("fecha_venta")
+  subtotal        Decimal  @db.Decimal(12, 2)
+  descuentoTotal  Decimal  @default(0) @map("descuento_total") @db.Decimal(12, 2)
+  impuestoTotal   Decimal  @default(0) @map("impuesto_total") @db.Decimal(12, 2)
+  totalAPagar     Decimal  @map("total_a_pagar") @db.Decimal(12, 2)
+  metodoPago      String   @map("metodo_pago") @db.VarChar(20)
+  estado          EstadoVenta @default(Completada)
+
+  // Relations
+  usuario         Usuario @relation(fields: [usuarioId], references: [usuarioId])
+  detalleVenta    DetalleVenta[]
+
+  @@map("ventas")
+}
+
+model DetalleVenta {
+  detalleVentaId       Int     @id @default(autoincrement()) @map("detalle_venta_id")
+  ventaId              Int     @map("venta_id")
+  loteId               Int     @map("lote_id")
+  cantidad             Int
+  precioVentaUnitario  Decimal @map("precio_venta_unitario") @db.Decimal(12, 2)
+  totalLinea           Decimal @map("total_linea") @db.Decimal(12, 2)
+
+  // Relations
+  venta                Venta @relation(fields: [ventaId], references: [ventaId], onDelete: Cascade)
+  lote                 Lote  @relation(fields: [loteId], references: [loteId])
+
+  @@map("detalle_venta")
+}
+
+model HistorialCambio {
+  historialId   Int      @id @default(autoincrement()) @map("historial_id")
+  usuarioId     Int?     @map("usuario_id")
+  accion        String   @db.VarChar(255)
+  detalles      Json?
+  fechaCambio   DateTime @default(now()) @map("fecha_cambio")
+
+  // Relations
+  usuario       Usuario? @relation(fields: [usuarioId], references: [usuarioId])
+
+  @@map("historial_cambios")
+}
+
+enum Rol {
+  administrador
+  cajero
+  inventario
+}
+
+enum EstadoActa {
+  EnProceso @map("En Proceso")
+  Completada
+}
+
+enum EstadoVenta {
+  Completada
+  Cancelada
+}
