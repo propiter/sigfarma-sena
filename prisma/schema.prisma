@@ -29,6 +29,7 @@ model Usuario {
   ventas          Venta[]
   actasRecepcion  ActaRecepcion[] @relation("UsuarioReceptor")
   historialCambios HistorialCambio[]
+  ordenesCompra   OrdenCompra[]
 
   @@map("usuarios")
 }
@@ -45,8 +46,21 @@ model Proveedor {
 
   // Relations
   actasRecepcion ActaRecepcion[]
+  ordenesCompra  OrdenCompra[]
 
   @@map("proveedores")
+}
+
+model UnidadMedida {
+  unidadId    Int    @id @default(autoincrement()) @map("unidad_id")
+  nombre      String @unique @db.VarChar(50) // "Tabletas", "Mililitros", "Cajas", "Gramos"
+  abreviacion String @db.VarChar(10) // "tab", "ml", "caj", "gr"
+  activo      Boolean @default(true)
+
+  // Relations
+  productos   Producto[]
+
+  @@map("unidades_medida")
 }
 
 model Producto {
@@ -57,20 +71,25 @@ model Producto {
   concentracion          String?  @db.VarChar(50)
   formaFarmaceutica      String?  @map("forma_farmaceutica") @db.VarChar(50)
   presentacion           String   @db.VarChar(100)
+  unidadMedidaId         Int      @map("unidad_medida_id")
   laboratorio            String?  @db.VarChar(100)
   registroSanitario      String?  @map("registro_sanitario") @db.VarChar(50)
   requiereRefrigeracion  Boolean  @default(false) @map("requiere_refrigeracion")
   esControlado           Boolean  @default(false) @map("es_controlado")
   stockTotal             Int      @default(0) @map("stock_total")
   stockMinimo            Int      @default(5) @map("stock_minimo")
+  stockMaximo            Int      @default(1000) @map("stock_maximo")
   precioVentaSugerido    Decimal  @map("precio_venta_sugerido") @db.Decimal(12, 2)
   aplicaIva              Boolean  @default(true) @map("aplica_iva")
   activo                 Boolean  @default(true)
   fechaCreacion          DateTime @default(now()) @map("fecha_creacion")
 
   // Relations
+  unidadMedida           UnidadMedida @relation(fields: [unidadMedidaId], references: [unidadId])
   lotes                  Lote[]
   detalleActaRecepcion   DetalleActaRecepcion[]
+  detalleOrdenCompra     DetalleOrdenCompra[]
+  notificacionesReabastecimiento NotificacionReabastecimiento[]
 
   @@index([nombre])
   @@map("productos")
@@ -86,6 +105,8 @@ model Lote {
   precioCompra        Decimal  @map("precio_compra") @db.Decimal(12, 2)
   precioVentaLote     Decimal  @map("precio_venta_lote") @db.Decimal(12, 2)
   fechaIngreso        DateTime @default(now()) @map("fecha_ingreso")
+  alertaVencimiento   AlertaVencimiento @default(Verde) @map("alerta_vencimiento")
+  notas               String?  // Notas especiales del lote
 
   // Relations
   producto            Producto @relation(fields: [productoId], references: [productoId], onDelete: Cascade)
@@ -97,6 +118,46 @@ model Lote {
   @@map("lotes")
 }
 
+model OrdenCompra {
+  ordenId           Int      @id @default(autoincrement()) @map("orden_id")
+  proveedorId       Int      @map("proveedor_id")
+  usuarioCreadorId  Int      @map("usuario_creador_id")
+  numeroOrden       String   @unique @map("numero_orden") @db.VarChar(50)
+  fechaOrden        DateTime @default(now()) @map("fecha_orden")
+  fechaEntregaEsperada DateTime? @map("fecha_entrega_esperada")
+  estado            EstadoOrden @default(Pendiente)
+  subtotal          Decimal  @db.Decimal(12, 2)
+  impuestos         Decimal  @default(0) @db.Decimal(12, 2)
+  total             Decimal  @db.Decimal(12, 2)
+  observaciones     String?
+  fechaRecepcion    DateTime? @map("fecha_recepcion")
+
+  // Relations
+  proveedor         Proveedor @relation(fields: [proveedorId], references: [proveedorId])
+  usuarioCreador    Usuario   @relation(fields: [usuarioCreadorId], references: [usuarioId])
+  detalleOrdenCompra DetalleOrdenCompra[]
+  actasRecepcion    ActaRecepcion[]
+
+  @@map("ordenes_compra")
+}
+
+model DetalleOrdenCompra {
+  detalleId         Int     @id @default(autoincrement()) @map("detalle_id")
+  ordenId           Int     @map("orden_id")
+  productoId        Int     @map("producto_id")
+  cantidadSolicitada Int    @map("cantidad_solicitada")
+  cantidadRecibida  Int     @default(0) @map("cantidad_recibida")
+  precioUnitario    Decimal @map("precio_unitario") @db.Decimal(12, 2)
+  totalLinea        Decimal @map("total_linea") @db.Decimal(12, 2)
+  notas             String?
+
+  // Relations
+  orden             OrdenCompra @relation(fields: [ordenId], references: [ordenId], onDelete: Cascade)
+  producto          Producto    @relation(fields: [productoId], references: [productoId])
+
+  @@map("detalle_orden_compra")
+}
+
 model ActaRecepcion {
   actaId              Int      @id @default(autoincrement()) @map("acta_id")
   proveedorId         Int      @map("proveedor_id")
@@ -106,10 +167,12 @@ model ActaRecepcion {
   fechaRecepcion      DateTime @default(now()) @map("fecha_recepcion")
   observaciones       String?
   estado              EstadoActa @default(EnProceso)
+  tipoRecepcion       TipoRecepcion @default(Normal) @map("tipo_recepcion")
 
   // Relations
   proveedor           Proveedor @relation(fields: [proveedorId], references: [proveedorId])
   usuarioReceptor     Usuario   @relation("UsuarioReceptor", fields: [usuarioReceptorId], references: [usuarioId])
+  ordenCompra         OrdenCompra? @relation(fields: [ordenCompraId], references: [ordenId])
   detalleActaRecepcion DetalleActaRecepcion[]
 
   @@map("actas_recepcion")
@@ -124,6 +187,8 @@ model DetalleActaRecepcion {
   cantidadRecibida           Int      @map("cantidad_recibida")
   precioCompraRecibido       Decimal  @map("precio_compra_recibido") @db.Decimal(12, 2)
   loteCreadoId               Int?     @map("lote_creado_id")
+  tipoMovimiento             TipoMovimiento @default(Ingreso) @map("tipo_movimiento")
+  notas                      String?  // Notas sobre bonificaciones, faltantes, etc.
 
   // Relations
   acta                       ActaRecepcion @relation(fields: [actaId], references: [actaId], onDelete: Cascade)
@@ -131,6 +196,22 @@ model DetalleActaRecepcion {
   loteCreado                 Lote? @relation("LoteCreado", fields: [loteCreadoId], references: [loteId])
 
   @@map("detalle_acta_recepcion")
+}
+
+model NotificacionReabastecimiento {
+  notificacionId    Int      @id @default(autoincrement()) @map("notificacion_id")
+  productoId        Int      @map("producto_id")
+  tipoNotificacion  TipoNotificacion @map("tipo_notificacion")
+  mensaje           String
+  fechaCreacion     DateTime @default(now()) @map("fecha_creacion")
+  fechaVisto        DateTime? @map("fecha_visto")
+  activo            Boolean  @default(true)
+  prioridad         Prioridad @default(Media)
+
+  // Relations
+  producto          Producto @relation(fields: [productoId], references: [productoId])
+
+  @@map("notificaciones_reabastecimiento")
 }
 
 model Venta {
@@ -188,9 +269,55 @@ enum Rol {
 enum EstadoActa {
   EnProceso @map("En Proceso")
   Completada
+  Cancelada
 }
 
 enum EstadoVenta {
   Completada
   Cancelada
+}
+
+enum EstadoOrden {
+  Pendiente
+  Enviada
+  Recibida
+  Completada
+  Cancelada
+}
+
+enum TipoRecepcion {
+  Normal
+  Urgente
+  Bonificacion
+  Devolucion
+}
+
+enum TipoMovimiento {
+  Ingreso
+  Ajuste
+  Bonificacion
+  Faltante
+}
+
+enum AlertaVencimiento {
+  Vencido @map("vencido")
+  Rojo @map("rojo")
+  Amarillo @map("amarillo")
+  Naranja @map("naranja")
+  Verde @map("verde")
+}
+
+enum TipoNotificacion {
+  StockBajo @map("stock_bajo")
+  StockCritico @map("stock_critico")
+  VencimientoCercano @map("vencimiento_cercano")
+  ProductoVencido @map("producto_vencido")
+  ReabastecimientoSugerido @map("reabastecimiento_sugerido")
+}
+
+enum Prioridad {
+  Baja
+  Media
+  Alta
+  Critica
 }
