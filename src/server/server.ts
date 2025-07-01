@@ -10,6 +10,7 @@ import { inventoryRoutes } from './modules/inventory/inventory.routes.js';
 import { posRoutes } from './modules/pos/pos.routes.js';
 import { reportRoutes } from './modules/reports/reports.routes.js';
 import { settingsRoutes } from './modules/settings/settings.routes.js';
+import { notificationRoutes } from './modules/notifications/notifications.routes.js';
 import { errorHandler } from './core/middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -39,6 +40,7 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/pos', posRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -58,4 +60,5 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`🚀 SIGFARMA-SENA Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🎨 Theme: Configurable (Light/Dark mode available)`);
 });
