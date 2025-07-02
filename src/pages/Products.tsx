@@ -8,6 +8,7 @@ import { ProductDetails } from '@/components/products/ProductDetails';
 import { ProductForm } from '@/components/products/ProductForm';
 import { ProductsStats } from '@/components/products/ProductsStats';
 import { Package, Plus, Eye } from 'lucide-react';
+import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
 
 interface Product {
   productoId: number;
@@ -107,7 +108,7 @@ export function Products() {
         await fetchProducts();
         setShowCreateForm(false);
         setActiveTab('list');
-        alert('Producto creado exitosamente');
+        showSuccessMessage('Producto creado exitosamente');
       } else {
         const error = await response.json();
         throw new Error(error.message);
@@ -132,7 +133,7 @@ export function Products() {
         await fetchProducts();
         setShowEditForm(false);
         setActiveTab('details');
-        alert('Producto actualizado exitosamente');
+        showSuccessMessage('Producto actualizado exitosamente');
       } else {
         const error = await response.json();
         throw new Error(error.message);

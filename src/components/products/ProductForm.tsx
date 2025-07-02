@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
+import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
+
 import { 
   Package, 
   Search, 
@@ -144,7 +146,7 @@ export function ProductForm({ mode, product, onSubmit, onCancel, showLoteForm = 
           });
         } else {
           setFoundProduct(null);
-          alert('Producto no encontrado. Puedes crear uno nuevo con estos datos.');
+          showWarningMessage('Producto no encontrado. Puedes crear uno nuevo con estos datos.');
         }
       }
     } catch (error) {
@@ -182,12 +184,12 @@ export function ProductForm({ mode, product, onSubmit, onCancel, showLoteForm = 
     e.preventDefault();
     
     if (!productData.nombre.trim() || !productData.presentacion.trim()) {
-      alert('El nombre y la presentación son requeridos');
+      showWarningMessage('El nombre y la presentación son requeridos');
       return;
     }
 
     if (showLoteForm && (!loteData.numeroLote || !loteData.fechaVencimiento || loteData.cantidadInicial <= 0)) {
-      alert('Completa todos los campos del lote');
+      showWarningMessage('Completa todos los campos del lote');
       return;
     }
 
@@ -195,7 +197,7 @@ export function ProductForm({ mode, product, onSubmit, onCancel, showLoteForm = 
     try {
       await onSubmit(productData, showLoteForm ? loteData : undefined);
     } catch (error: any) {
-      alert(error.message || 'Error al guardar el producto');
+      showErrorMessage(error.message || 'Error al guardar el producto');
     } finally {
       setLoading(false);
     }

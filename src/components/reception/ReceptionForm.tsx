@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/authStore';
 import { formatCurrency } from '@/lib/utils';
+import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
+
 import { 
   Package, 
   Plus, 
@@ -166,7 +168,7 @@ export function ReceptionForm({ onReceptionCreated }: ReceptionFormProps) {
 
   const submitReception = async () => {
     if (!selectedProvider || items.length === 0) {
-      alert('Selecciona un proveedor y agrega al menos un producto');
+      showWarningMessage('Selecciona un proveedor y agrega al menos un producto');
       return;
     }
 
@@ -179,7 +181,7 @@ export function ReceptionForm({ onReceptionCreated }: ReceptionFormProps) {
     );
 
     if (invalidItems.length > 0) {
-      alert('Completa todos los campos requeridos de los productos');
+      showWarningMessage('Completa todos los campos requeridos de los productos');
       return;
     }
 
@@ -208,7 +210,7 @@ export function ReceptionForm({ onReceptionCreated }: ReceptionFormProps) {
       });
 
       if (response.ok) {
-        alert('Acta de recepción creada exitosamente. Pendiente de aprobación por un administrador.');
+        showSuccessMessage('Acta de recepción creada exitosamente. Pendiente de aprobación por un administrador.');
         // Reset form
         setSelectedProvider(null);
         setNumeroFactura('');
@@ -218,11 +220,11 @@ export function ReceptionForm({ onReceptionCreated }: ReceptionFormProps) {
         onReceptionCreated();
       } else {
         const error = await response.json();
-        alert(`Error: ${error.message}`);
+        showErrorMessage(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error creating reception:', error);
-      alert('Error al crear la recepción');
+      showErrorMessage('Error al crear la recepción');
     } finally {
       setLoading(false);
     }

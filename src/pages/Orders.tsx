@@ -8,6 +8,7 @@ import { OrdersList } from '@/components/orders/OrdersList';
 import { OrderDetails } from '@/components/orders/OrderDetails';
 import { OrderForm } from '@/components/orders/OrderForm';
 import { ShoppingCart, Plus, Eye } from 'lucide-react';
+import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
 
 interface Order {
   ordenId: number;
@@ -102,16 +103,16 @@ export function Orders() {
 
       if (response.ok) {
         const data = await response.json();
-        alert(data.message);
+        showSuccessMessage(data.message);
         fetchOrders();
         fetchOrderStats();
       } else {
         const error = await response.json();
-        alert(`Error: ${error.message}`);
+        showErrorMessage(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error generating auto orders:', error);
-      alert('Error al generar órdenes automáticas');
+      showErrorMessage('Error al generar órdenes automáticas');
     }
   };
 
@@ -129,7 +130,7 @@ export function Orders() {
         await fetchOrderStats();
         setShowCreateForm(false);
         setActiveTab('list');
-        alert('Orden de compra creada exitosamente');
+        showSuccessMessage('Orden de compra creada exitosamente');
       } else {
         const error = await response.json();
         throw new Error(error.message);
@@ -155,15 +156,15 @@ export function Orders() {
 
       if (response.ok) {
         const data = await response.json();
-        alert(data.message);
+        showSuccessMessage(data.message);
         fetchOrders();
       } else {
         const error = await response.json();
-        alert(`Error: ${error.message}`);
+        showErrorMessage(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error creating reception from order:', error);
-      alert('Error al crear acta de recepción');
+      showErrorMessage('Error al crear acta de recepción');
     }
   };
 

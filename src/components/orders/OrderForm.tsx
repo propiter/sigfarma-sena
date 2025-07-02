@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
+import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
+
 import { 
   Plus, 
   Search, 
@@ -122,7 +124,7 @@ export function OrderForm({ onSubmit, onCancel }: OrderFormProps) {
     e.preventDefault();
     
     if (!selectedProvider || items.length === 0) {
-      alert('Selecciona un proveedor y agrega al menos un producto');
+      showWarningMessage('Selecciona un proveedor y agrega al menos un producto');
       return;
     }
 
@@ -131,7 +133,7 @@ export function OrderForm({ onSubmit, onCancel }: OrderFormProps) {
     );
 
     if (invalidItems.length > 0) {
-      alert('Completa todos los campos requeridos de los productos');
+      showWarningMessage('Completa todos los campos requeridos de los productos');
       return;
     }
 
@@ -149,7 +151,7 @@ export function OrderForm({ onSubmit, onCancel }: OrderFormProps) {
         }))
       });
     } catch (error: any) {
-      alert(error.message || 'Error al crear la orden');
+      showErrorMessage(error.message || 'Error al crear la orden');
     } finally {
       setLoading(false);
     }

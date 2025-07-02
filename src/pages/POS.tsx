@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/authStore';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
 import { 
   ShoppingCart, 
   Search, 
@@ -157,14 +158,14 @@ export function POS() {
         setCart([]);
         setShowPayment(false);
         setAmountReceived('');
-        alert(`Venta #${sale.ventaId} completada exitosamente`);
+        showSuccessMessage(`Venta #${sale.ventaId} completada exitosamente`);
       } else {
         const error = await response.json();
-        alert(`Error: ${error.message}`);
+        showErrorMessage(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error processing sale:', error);
-      alert('Error al procesar la venta');
+      showErrorMessage('Error al procesar la venta');
     } finally {
       setProcessingPayment(false);
     }

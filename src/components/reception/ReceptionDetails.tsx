@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/authStore';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
+
 import { 
   FileText, 
   CheckCircle, 
@@ -73,15 +75,15 @@ export function ReceptionDetails({ reception, onApprovalProcessed }: ReceptionDe
       });
 
       if (response.ok) {
-        alert('Acta aprobada y procesada exitosamente');
+        showSuccessMessage('Acta aprobada y procesada exitosamente');
         onApprovalProcessed();
       } else {
         const error = await response.json();
-        alert(`Error: ${error.message}`);
+        showErrorMessage(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error approving reception:', error);
-      alert('Error al aprobar la recepción');
+      showErrorMessage('Error al aprobar la recepción');
     }
   };
 
@@ -104,15 +106,15 @@ export function ReceptionDetails({ reception, onApprovalProcessed }: ReceptionDe
       });
 
       if (response.ok) {
-        alert('Acta rechazada exitosamente');
+        showSuccessMessage('Acta rechazada exitosamente');
         onApprovalProcessed();
       } else {
         const error = await response.json();
-        alert(`Error: ${error.message}`);
+        showErrorMessage(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error rejecting reception:', error);
-      alert('Error al rechazar la recepción');
+      showErrorMessage('Error al rechazar la recepción');
     }
   };
 
@@ -124,7 +126,7 @@ export function ReceptionDetails({ reception, onApprovalProcessed }: ReceptionDe
       
       if (response.ok) {
         // Aquí iría la lógica de descarga del PDF
-        alert('Funcionalidad de exportación PDF en desarrollo');
+        showSuccessMessage('Funcionalidad de exportación PDF en desarrollo');
       }
     } catch (error) {
       console.error('Error exporting PDF:', error);

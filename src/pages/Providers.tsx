@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthStore } from '@/store/authStore';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
 import { 
   Building, 
   Plus, 
@@ -132,11 +133,11 @@ export function Providers() {
         setActiveTab('list');
       } else {
         const error = await response.json();
-        alert(`Error: ${error.message}`);
+        showErrorMessage(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error creating provider:', error);
-      alert('Error al crear proveedor');
+      showErrorMessage('Error al crear proveedor');
     }
   };
 
@@ -623,7 +624,7 @@ function ProviderForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void; o
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.nombre.trim()) {
-      alert('El nombre del proveedor es requerido');
+      showWarningMessage('El nombre del proveedor es requerido');
       return;
     }
 

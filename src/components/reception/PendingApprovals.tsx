@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
+import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
+
 import { 
   Clock, 
   CheckCircle, 
@@ -57,16 +59,16 @@ export function PendingApprovals({ onApprovalProcessed, onSelectReception }: Pen
       });
 
       if (response.ok) {
-        alert('Acta aprobada y procesada exitosamente');
+        showSuccessMessage('Acta aprobada y procesada exitosamente');
         fetchPendingApprovals();
         onApprovalProcessed();
       } else {
         const error = await response.json();
-        alert(`Error: ${error.message}`);
+        showErrorMessage(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error approving reception:', error);
-      alert('Error al aprobar la recepción');
+      showErrorMessage('Error al aprobar la recepción');
     }
   };
 
@@ -89,16 +91,16 @@ export function PendingApprovals({ onApprovalProcessed, onSelectReception }: Pen
       });
 
       if (response.ok) {
-        alert('Acta rechazada exitosamente');
+        showSuccessMessage('Acta rechazada exitosamente');
         fetchPendingApprovals();
         onApprovalProcessed();
       } else {
         const error = await response.json();
-        alert(`Error: ${error.message}`);
+        showErrorMessage(`Error: ${error.message}`);
       }
     } catch (error) {
       console.error('Error rejecting reception:', error);
-      alert('Error al rechazar la recepción');
+      showErrorMessage('Error al rechazar la recepción');
     }
   };
 
