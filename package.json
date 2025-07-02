@@ -9,7 +9,7 @@
     "dev:server": "nodemon --exec tsx src/server/server.ts",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
-    "build:server": "tsc --project tsconfig.server.json",
+    "build:server": "tsc -p tsconfig.server.json",
     "start": "node dist/server/server.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
@@ -64,6 +64,8 @@
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.18",
     "concurrently": "^8.2.2",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
     "eslint": "^9.9.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
@@ -75,6 +77,7 @@
     "tsx": "^4.6.2",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
-    "vite": "^5.4.2"
+    "vite": "^5.4.2",
+    "wait-on": "^7.2.0"
   }
 }

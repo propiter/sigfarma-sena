@@ -8,7 +8,7 @@ import { ProductDetails } from '@/components/products/ProductDetails';
 import { ProductForm } from '@/components/products/ProductForm';
 import { ProductsStats } from '@/components/products/ProductsStats';
 import { Package, Plus, Eye } from 'lucide-react';
-import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
+import { showSuccessMessage } from '@/lib/notifications';
 
 interface Product {
   productoId: number;

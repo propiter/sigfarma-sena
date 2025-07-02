@@ -16,8 +16,6 @@ import {
   Save,
   AlertTriangle,
   FileText,
-  Building,
-  Calendar,
   User
 } from 'lucide-react';
 

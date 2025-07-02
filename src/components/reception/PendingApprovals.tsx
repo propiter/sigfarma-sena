@@ -3,18 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
-import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
+import { showSuccessMessage, showErrorMessage } from '@/lib/notifications';
 
 import { 
   Clock, 
   CheckCircle, 
   X, 
-  Eye, 
-  AlertTriangle,
+  Eye,
   User,
   Building,
-  Calendar,
-  Package
+  Calendar
 } from 'lucide-react';
 
 interface PendingApprovalsProps {

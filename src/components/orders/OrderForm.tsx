@@ -32,6 +32,7 @@ interface Product {
   precioVentaSugerido: number;
   stockTotal: number;
   stockMinimo: number;
+  stockMaximo: number;
 }
 
 interface OrderItem {

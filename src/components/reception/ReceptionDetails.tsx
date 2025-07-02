@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/store/authStore';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
-import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
+import { showSuccessMessage, showErrorMessage } from '@/lib/notifications';
 
 import { 
   FileText, 
@@ -14,7 +14,6 @@ import {
   Building,
   Calendar,
   Package,
-  AlertTriangle,
   Clock,
   Shield
 } from 'lucide-react';

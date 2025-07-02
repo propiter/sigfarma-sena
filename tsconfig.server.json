@@ -4,9 +4,6 @@
     "lib": ["ES2023"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true,
-    "declaration": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
@@ -20,7 +17,8 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true
   },
   "include": ["src/server/**/*"],
   "exclude": ["node_modules", "dist", "src/client"]
