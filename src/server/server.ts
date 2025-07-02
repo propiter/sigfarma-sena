@@ -11,6 +11,8 @@ import { posRoutes } from './modules/pos/pos.routes.js';
 import { reportRoutes } from './modules/reports/reports.routes.js';
 import { settingsRoutes } from './modules/settings/settings.routes.js';
 import { notificationRoutes } from './modules/notifications/notifications.routes.js';
+import { providerRoutes } from './modules/providers/providers.routes.js';
+import { orderRoutes } from './modules/orders/orders.routes.js';
 import { errorHandler } from './core/middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -41,6 +43,8 @@ app.use('/api/pos', posRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/providers', providerRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

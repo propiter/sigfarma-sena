@@ -9,6 +9,8 @@ import { Users } from '@/pages/Users';
 import { Settings } from '@/pages/Settings';
 import { Notifications } from '@/pages/Notifications';
 import { Reception } from '@/pages/Reception';
+import { Providers } from '@/pages/Providers';
+import { Orders } from '@/pages/Orders';
 import { Layout } from '@/components/Layout';
 
 function App() {
@@ -23,6 +25,8 @@ function App() {
           <Route path="inventory" element={<Inventory />} />
           <Route path="reception" element={<Reception />} />
           <Route path="products" element={<Products />} />
+          <Route path="providers" element={<Providers />} />
+          <Route path="orders" element={<Orders />} />
           <Route path="reports" element={<Reports />} />
           <Route path="users" element={<Users />} />
           <Route path="settings" element={<Settings />} />
