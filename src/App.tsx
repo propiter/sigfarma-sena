@@ -7,8 +7,8 @@ import { Products } from '@/pages/Products';
 import { Reports } from '@/pages/Reports';
 import { Users } from '@/pages/Users';
 import { Settings } from '@/pages/Settings';
-//import { Notifications } from '@/pages/Notifications';
-//import { Reception } from '@/pages/Reception';
+import { Notifications } from '@/pages/Notifications';
+import { Reception } from '@/pages/Reception';
 import { Layout } from '@/components/Layout';
 
 function App() {
@@ -21,12 +21,12 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="pos" element={<POS />} />
           <Route path="inventory" element={<Inventory />} />
-          {/* <Route path="inventory/reception" element={<Reception />} /> */}
+          <Route path="reception" element={<Reception />} />
           <Route path="products" element={<Products />} />
           <Route path="reports" element={<Reports />} />
           <Route path="users" element={<Users />} />
           <Route path="settings" element={<Settings />} />
-          {/* <Route path="notifications" element={<Notifications />} /> */}
+          <Route path="notifications" element={<Notifications />} />
         </Route>
       </Routes>
     </Router>

@@ -27,7 +27,8 @@ model Usuario {
 
   // Relations
   ventas          Venta[]
-  actasRecepcion  ActaRecepcion[] @relation("UsuarioReceptor")
+  actasRecepcionCreadas  ActaRecepcion[] @relation("UsuarioReceptor")
+  actasRecepcionAprobadas ActaRecepcion[] @relation("UsuarioAprobador")
   historialCambios HistorialCambio[]
   ordenesCompra   OrdenCompra[]
 
@@ -162,16 +163,22 @@ model ActaRecepcion {
   actaId              Int      @id @default(autoincrement()) @map("acta_id")
   proveedorId         Int      @map("proveedor_id")
   usuarioReceptorId   Int      @map("usuario_receptor_id")
+  usuarioAprobadorId  Int?     @map("usuario_aprobador_id")
   ordenCompraId       Int?     @map("orden_compra_id")
   numeroFactura       String?  @map("numero_factura") @db.VarChar(50)
   fechaRecepcion      DateTime @default(now()) @map("fecha_recepcion")
-  observaciones       String?
-  estado              EstadoActa @default(EnProceso)
+  fechaAprobacion     DateTime? @map("fecha_aprobacion")
+  observacionesReceptor String? @map("observaciones_receptor")
+  observacionesAprobador String? @map("observaciones_aprobador")
+  estado              EstadoActa @default(PendienteAprobacion)
   tipoRecepcion       TipoRecepcion @default(Normal) @map("tipo_recepcion")
+  firmaReceptor       String?  @map("firma_receptor") // Base64 de la firma
+  firmaAprobador      String?  @map("firma_aprobador") // Base64 de la firma
 
   // Relations
   proveedor           Proveedor @relation(fields: [proveedorId], references: [proveedorId])
   usuarioReceptor     Usuario   @relation("UsuarioReceptor", fields: [usuarioReceptorId], references: [usuarioId])
+  usuarioAprobador    Usuario?  @relation("UsuarioAprobador", fields: [usuarioAprobadorId], references: [usuarioId])
   ordenCompra         OrdenCompra? @relation(fields: [ordenCompraId], references: [ordenId])
   detalleActaRecepcion DetalleActaRecepcion[]
 
@@ -183,6 +190,7 @@ model DetalleActaRecepcion {
   actaId                     Int      @map("acta_id")
   productoId                 Int      @map("producto_id")
   numeroLoteRecibido         String   @map("numero_lote_recibido") @db.VarChar(50)
+  registroInvima             String?  @map("registro_invima") @db.VarChar(50)
   fechaVencimientoRecibida   DateTime @map("fecha_vencimiento_recibida") @db.Date
   cantidadRecibida           Int      @map("cantidad_recibida")
   precioCompraRecibido       Decimal  @map("precio_compra_recibido") @db.Decimal(12, 2)
@@ -267,7 +275,9 @@ enum Rol {
 }
 
 enum EstadoActa {
-  EnProceso @map("En Proceso")
+  PendienteAprobacion @map("Pendiente Aprobacion")
+  Aprobada
+  Rechazada
   Completada
   Cancelada
 }
@@ -313,6 +323,7 @@ enum TipoNotificacion {
   VencimientoCercano @map("vencimiento_cercano")
   ProductoVencido @map("producto_vencido")
   ReabastecimientoSugerido @map("reabastecimiento_sugerido")
+  ActaPendienteAprobacion @map("acta_pendiente_aprobacion")
 }
 
 enum Prioridad {

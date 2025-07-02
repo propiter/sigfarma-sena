@@ -18,7 +18,9 @@ import {
   Activity,
   Bell,
   Sun,
-  Moon
+  Moon,
+  Truck,
+  Building
 } from 'lucide-react';
 
 const navigation = [
@@ -26,6 +28,9 @@ const navigation = [
   { name: 'Punto de Venta', href: '/pos', icon: ShoppingCart, roles: ['administrador', 'cajero'] },
   { name: 'Inventario', href: '/inventory', icon: Package, roles: ['administrador', 'inventario'] },
   { name: 'Productos', href: '/products', icon: Activity, roles: ['administrador', 'inventario'] },
+  { name: 'Proveedores', href: '/providers', icon: Building, roles: ['administrador', 'inventario'] },
+  { name: 'Órdenes de Compra', href: '/orders', icon: Truck, roles: ['administrador', 'inventario'] },
+  { name: 'Recepciones', href: '/reception', icon: Activity, roles: ['administrador', 'inventario'] },
   { name: 'Reportes', href: '/reports', icon: FileText, roles: ['administrador', 'cajero', 'inventario'] },
   { name: 'Notificaciones', href: '/notifications', icon: Bell, roles: ['administrador', 'cajero', 'inventario'] },
   { name: 'Usuarios', href: '/users', icon: Users, roles: ['administrador'] },
