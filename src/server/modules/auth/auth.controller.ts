@@ -26,11 +26,21 @@ export class AuthController {
         return res.status(401).json({ message: 'Credenciales inválidas' });
       }
 
-      const token = jwt.sign(
-        { usuarioId: user.usuarioId, correo: user.correo, rol: user.rol },
-        process.env.JWT_SECRET!,
-        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-      );
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        throw new Error('JWT_SECRET is not defined');
+      }
+      
+      const payload = { 
+        usuarioId: user.usuarioId, 
+        correo: user.correo, 
+        rol: user.rol 
+      };
+      
+      const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
+      
+      // Using type assertion to ensure proper types
+      const token = jwt.sign(payload, jwtSecret, { expiresIn } as jwt.SignOptions);
 
       // Set secure cookie
       res.cookie('token', token, {
@@ -63,7 +73,7 @@ export class AuthController {
     }
   };
 
-  logout = async (req: Request, res: Response) => {
+  logout = async (_req: Request, res: Response) => {
     res.clearCookie('token');
     res.json({ message: 'Sesión cerrada exitosamente' });
   };

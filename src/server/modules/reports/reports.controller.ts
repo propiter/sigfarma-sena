@@ -3,7 +3,7 @@ import { prisma } from '../../core/prisma/client.js';
 import { AuthRequest } from '../../core/middleware/auth.js';
 
 export class ReportController {
-  getDashboardStats = async (req: AuthRequest, res: Response) => {
+  getDashboardStats = async (_req: AuthRequest, res: Response) => {
     try {
       const today = new Date();
       const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -135,7 +135,8 @@ export class ReportController {
 
   getSalesReport = async (req: AuthRequest, res: Response) => {
     try {
-      const { startDate, endDate, groupBy = 'day' } = req.query;
+      // groupBy is currently not used but kept for future implementation
+      const { startDate, endDate, groupBy: _groupBy = 'day' } = req.query;
 
       const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       const end = endDate ? new Date(endDate as string) : new Date();
@@ -186,7 +187,7 @@ export class ReportController {
     }
   };
 
-  getInventoryReport = async (req: AuthRequest, res: Response) => {
+  getInventoryReport = async (_req: AuthRequest, res: Response) => {
     try {
       const products = await prisma.producto.findMany({
         where: { activo: true },
@@ -225,7 +226,7 @@ export class ReportController {
     }
   };
 
-  getExpirationReport = async (req: AuthRequest, res: Response) => {
+  getExpirationReport = async (_req: AuthRequest, res: Response) => {
     try {
       const today = new Date();
       const alertaRojaDias = 180;

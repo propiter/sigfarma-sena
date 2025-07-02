@@ -3,7 +3,7 @@ import { prisma } from '../../core/prisma/client.js';
 import { AuthRequest } from '../../core/middleware/auth.js';
 
 export class UnitsController {
-  getUnits = async (req: AuthRequest, res: Response) => {
+  getUnits = async (_req: AuthRequest, res: Response) => {
     try {
       const units = await prisma.unidadMedida.findMany({
         where: { activo: true },

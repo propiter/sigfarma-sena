@@ -201,7 +201,7 @@ export class ProviderController {
     }
   };
 
-  getProviderStats = async (req: AuthRequest, res: Response) => {
+  getProviderStats = async (_req: AuthRequest, res: Response) => {
     try {
       const [total, active, withOrders, withReceptions] = await Promise.all([
         prisma.proveedor.count(),

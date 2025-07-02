@@ -246,11 +246,14 @@ export class OrderController {
         // Estimate price based on last lot price or suggested price
         const precioEstimado = product.lotes[0]?.precioCompra || 
                               Number(product.precioVentaSugerido) * 0.7;
+        const precioUnitario = Number(precioEstimado);
+        const totalLinea = cantidadSugerida * precioUnitario;
 
         return {
-          productoId: product.productoId,
+          producto: { connect: { productoId: product.productoId } },
           cantidadSolicitada: cantidadSugerida,
-          precioUnitario: Number(precioEstimado),
+          precioUnitario: precioUnitario,
+          totalLinea: totalLinea,
           notas: `Reabastecimiento automático - Stock actual: ${product.stockTotal}, Mínimo: ${product.stockMinimo}`
         };
       });
@@ -394,7 +397,7 @@ export class OrderController {
     }
   };
 
-  getOrderStats = async (req: AuthRequest, res: Response) => {
+  getOrderStats = async (_req: AuthRequest, res: Response) => {
     try {
       const [total, pending, sent, received, completed] = await Promise.all([
         prisma.ordenCompra.count(),

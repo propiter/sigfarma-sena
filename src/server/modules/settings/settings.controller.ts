@@ -2,12 +2,22 @@ import { Response } from 'express';
 import { prisma } from '../../core/prisma/client.js';
 import { AuthRequest } from '../../core/middleware/auth.js';
 
+interface SettingValue {
+  valor: string;
+  descripcion: string;
+  tipoDato: string;
+}
+
+interface SettingsMap {
+  [key: string]: SettingValue;
+}
+
 export class SettingsController {
-  getSettings = async (req: AuthRequest, res: Response) => {
+  getSettings = async (_req: AuthRequest, res: Response) => {
     try {
       const settings = await prisma.configuracion.findMany();
       
-      const configMap = settings.reduce((acc: any, setting) => {
+      const configMap: SettingsMap = settings.reduce<SettingsMap>((acc: SettingsMap, setting) => {
         acc[setting.clave] = {
           valor: setting.valor,
           descripcion: setting.descripcion,
@@ -17,7 +27,7 @@ export class SettingsController {
       }, {});
 
       // Add default settings if they don't exist
-      const defaultSettings = {
+      const defaultSettings: SettingsMap = {
         nombre_farmacia: { valor: 'Farmacia SENA', descripcion: 'Nombre de la farmacia', tipoDato: 'texto' },
         nit_farmacia: { valor: '', descripcion: 'NIT de la farmacia', tipoDato: 'texto' },
         direccion_farmacia: { valor: '', descripcion: 'Dirección de la farmacia', tipoDato: 'texto' },
@@ -52,7 +62,7 @@ export class SettingsController {
       };
 
       // Merge with defaults
-      Object.keys(defaultSettings).forEach(key => {
+      Object.keys(defaultSettings).forEach((key: string) => {
         if (!configMap[key]) {
           configMap[key] = defaultSettings[key];
         }
@@ -121,7 +131,7 @@ export class SettingsController {
     }
   };
 
-  exportSettings = async (req: AuthRequest, res: Response) => {
+  exportSettings = async (_req: AuthRequest, res: Response) => {
     try {
       const settings = await prisma.configuracion.findMany();
       

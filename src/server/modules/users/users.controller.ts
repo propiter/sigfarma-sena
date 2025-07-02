@@ -4,7 +4,7 @@ import { prisma } from '../../core/prisma/client.js';
 import { AuthRequest } from '../../core/middleware/auth.js';
 
 export class UserController {
-  getUsers = async (req: AuthRequest, res: Response) => {
+  getUsers = async (_req: AuthRequest, res: Response) => {
     try {
       const users = await prisma.usuario.findMany({
         select: {
@@ -46,7 +46,7 @@ export class UserController {
     }
   };
 
-  getUserStats = async (req: AuthRequest, res: Response) => {
+  getUserStats = async (_req: AuthRequest, res: Response) => {
     try {
       const [total, active, administrators, cashiers, inventory] = await Promise.all([
         prisma.usuario.count(),

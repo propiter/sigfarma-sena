@@ -51,7 +51,7 @@ export class NotificationController {
     }
   };
 
-  getNotificationCount = async (req: AuthRequest, res: Response) => {
+  getNotificationCount = async (_req: AuthRequest, res: Response) => {
     try {
       const unreadCount = await prisma.notificacionReabastecimiento.count({
         where: {
@@ -83,7 +83,7 @@ export class NotificationController {
     }
   };
 
-  markAllAsRead = async (req: AuthRequest, res: Response) => {
+  markAllAsRead = async (_req: AuthRequest, res: Response) => {
     try {
       await prisma.notificacionReabastecimiento.updateMany({
         where: {
