@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { Building2, Sun, Moon } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
@@ -35,25 +35,23 @@ export function WelcomeHeader() {
         </p>
       </div>
       
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={toggleTheme}
-          className="h-9 w-9"
-        >
-          {theme === 'dark' ? (
-            <Sun className="h-4 w-4" />
-          ) : (
-            <Moon className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+          <img 
+            src="/logos/logo.png" 
+            alt="Logo" 
+            className="h-8 w-auto" 
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.onerror = null;
+              target.src = '/logos/icon.png';
+            }}
+          />
+          {farmaciaName && (
+            <span className="font-medium text-sm text-orange-600 dark:text-orange-400">
+              {farmaciaName}
+            </span>
           )}
-        </Button>
-        
-        <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
-          <Building2 className="w-5 h-5" />
-          <span className="font-medium text-sm">SENA</span>
         </div>
       </div>
-    </div>
   );
 }

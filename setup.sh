@@ -122,14 +122,6 @@ if [ ! -d "node_modules" ]; then
     print_success "Dependencias instaladas"
 fi
 
-# Generar cliente Prisma
-print_status "Configurando base de datos..."
-npx prisma generate
-
-# Construir la aplicación
-print_status "Construyendo aplicación..."
-npm run build
-
 # Iniciar servicios con Docker
 print_status "Iniciando servicios..."
 docker-compose up -d
@@ -138,36 +130,51 @@ docker-compose up -d
 print_status "Esperando a que la base de datos esté lista..."
 sleep 10
 
-# Ejecutar migraciones
-print_status "Configurando esquema de base de datos..."
-npx prisma db push
+# Generar cliente Prisma
+print_status "Generando cliente Prisma..."
+npx prisma generate
 
-# Verificar si ya hay datos
-USERS_COUNT=$(docker-compose exec -T database psql -U postgres -d sigfarma_sena -t -c "SELECT COUNT(*) FROM usuarios;" 2>/dev/null | tr -d ' ' || echo "0")
+# Verificar si la base de datos existe
+DB_EXISTS=$(docker-compose exec -T database psql -U postgres -lqt | cut -d \| -f 1 | grep -w sigfarma_sena | wc -l)
 
-if [ "$USERS_COUNT" = "0" ] || [ -z "$USERS_COUNT" ]; then
+if [ "$DB_EXISTS" -eq "0" ]; then
+    print_status "Creando base de datos..."
+    docker-compose exec -T database psql -U postgres -c "CREATE DATABASE sigfarma_sena;"
+fi
+
+# Verificar si ya hay tablas en la base de datos
+TABLES_COUNT=$(docker-compose exec -T database psql -U postgres -d sigfarma_sena -c "\dt" | grep -c "public")
+
+if [ "$TABLES_COUNT" -eq "0" ]; then
+    print_status "Aplicando esquema de base de datos..."
+    npx prisma db push --accept-data-loss
+    
     print_status "Cargando datos iniciales..."
     npx prisma db seed
-    print_success "Datos de ejemplo cargados"
+    print_success "Base de datos inicializada con datos de ejemplo"
 else
     print_success "Base de datos ya contiene datos"
 fi
+
+# Construir la aplicación
+print_status "Construyendo aplicación..."
+npm run build
 
 # Verificar que los servicios estén funcionando
 print_status "Verificando servicios..."
 sleep 5
 
-if curl -f http://localhost:3000/api/health &> /dev/null; then
-    print_success "Servidor backend funcionando"
+# Iniciar la aplicación
+print_status "Iniciando aplicación..."
+if command -v xdg-open &> /dev/null; then
+    xdg-open http://localhost:3000 &
+elif command -v open &> /dev/null; then
+    open http://localhost:3000 &
 else
-    print_warning "El servidor backend puede tardar unos segundos más en iniciar"
+    print_status "Abre manualmente http://localhost:3000 en tu navegador"
 fi
 
-if curl -f http://localhost:8080 &> /dev/null; then
-    print_success "Adminer (gestor de BD) funcionando"
-else
-    print_warning "Adminer puede tardar unos segundos más en iniciar"
-fi
+npm start
 
 echo ""
 echo "🎉 ¡INSTALACIÓN COMPLETADA EXITOSAMENTE!"

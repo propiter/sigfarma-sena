@@ -55,9 +55,6 @@ if exist ".env" if exist "node_modules" (
             docker system prune -f
             rmdir /s /q node_modules 2>nul
             del .env 2>nul
-            echo 📋 Iniciando servicios existentes...
-            docker-compose up -d
-            goto :verify_services
         ) else (
             echo 📋 Operación cancelada
             pause
@@ -116,9 +113,44 @@ if not exist "node_modules" (
     echo ✅ Dependencias instaladas
 )
 
+REM Iniciar servicios con Docker
+echo 📋 Iniciando servicios...
+docker-compose up -d
+
+REM Esperar a que la base de datos esté lista
+echo 📋 Esperando a que la base de datos esté lista...
+timeout /t 10 /nobreak >nul
+
 REM Generar cliente Prisma
 echo 📋 Configurando base de datos...
 npx prisma generate
+
+REM Verificar si la base de datos existe y tiene tablas
+echo 📋 Verificando base de datos...
+docker-compose exec -T database psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname = 'sigfarma_sena'" | findstr /C:"1" >nul
+if errorlevel 1 (
+    echo 📋 Creando base de datos...
+    docker-compose exec -T database psql -U postgres -c "CREATE DATABASE sigfarma_sena"
+)
+
+REM Verificar si hay tablas en la base de datos
+set DB_EMPTY=0
+docker-compose exec -T database psql -U postgres -d sigfarma_sena -c "\dt" | findstr /C:"0 rows" >nul
+if not errorlevel 1 (
+    set DB_EMPTY=1
+)
+
+REM Ejecutar migraciones si la base de datos está vacía
+if !DB_EMPTY!==1 (
+    echo 📋 Aplicando esquema de base de datos...
+    npx prisma db push --accept-data-loss
+    
+    echo 📋 Cargando datos iniciales...
+    npx prisma db seed
+    echo ✅ Base de datos inicializada con datos de ejemplo
+) else (
+    echo ✅ Base de datos ya contiene datos
+)
 
 REM Construir la aplicación
 echo 📋 Construyendo aplicación...
@@ -129,40 +161,15 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Iniciar servicios con Docker
-echo 📋 Iniciando servicios...
-docker-compose up -d
-
-REM Esperar a que la base de datos esté lista
-echo 📋 Esperando a que la base de datos esté lista...
-timeout /t 10 /nobreak >nul
-
-REM Ejecutar migraciones
-echo 📋 Configurando esquema de base de datos...
-npx prisma db push
-
-REM Cargar datos iniciales si es necesario
-echo 📋 Verificando datos iniciales...
-npx prisma db seed
-
 :verify_services
 REM Verificar que los servicios estén funcionando
 echo 📋 Verificando servicios...
 timeout /t 5 /nobreak >nul
 
-curl -f http://localhost:3000/api/health >nul 2>&1
-if errorlevel 1 (
-    echo ⚠️  El servidor backend puede tardar unos segundos más en iniciar
-) else (
-    echo ✅ Servidor backend funcionando
-)
-
-curl -f http://localhost:8080 >nul 2>&1
-if errorlevel 1 (
-    echo ⚠️  Adminer puede tardar unos segundos más en iniciar
-) else (
-    echo ✅ Adminer ^(gestor de BD^) funcionando
-)
+REM Iniciar la aplicación
+echo 📋 Iniciando aplicación...
+start "" http://localhost:3000
+npm start
 
 echo.
 echo 🎉 ¡INSTALACIÓN COMPLETADA EXITOSAMENTE!
