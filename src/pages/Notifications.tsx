@@ -51,10 +51,21 @@ export function Notifications() {
       });
       if (response.ok) {
         const data = await response.json();
-        setNotifications(data);
+        if (Array.isArray(data)) {
+          setNotifications(data);
+        } else if (data && Array.isArray(data.notifications)) {
+          setNotifications(data.notifications);
+        } else {
+          console.error('Unexpected notifications data format:', data);
+          setNotifications([]);
+        }
+      } else {
+        console.error('Failed to fetch notifications:', response.statusText);
+        setNotifications([]);
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -117,11 +128,12 @@ export function Notifications() {
     }
   };
 
-  const filteredNotifications = notifications.filter(notification => {
+  const filteredNotifications = Array.isArray(notifications) ? notifications.filter(notification => {
+    if (!notification) return false;
     if (filter === 'unread') return !notification.fechaVisto;
     if (filter === 'high') return notification.prioridad === 'Alta' || notification.prioridad === 'Critica';
     return true;
-  });
+  }) : [];
 
   const unreadCount = notifications.filter(n => !n.fechaVisto).length;
   const highPriorityCount = notifications.filter(n => 
