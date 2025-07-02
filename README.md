@@ -315,6 +315,29 @@ docker-compose exec -T database pg_dump -U postgres sigfarma_sena > "backups/bac
 
 ---
 
+## 🖥️ Crear aplicación de escritorio
+
+Para compilar la aplicación de escritorio con Electron, usa uno de los siguientes comandos según tu sistema operativo:
+
+### 🔵 Windows
+```bash
+npm run electron:build:win
+```
+
+### 🍎 macOS
+
+```bash
+npm run electron:build:mac
+```
+
+### 🐧 Linux
+
+```bash
+npm run electron:build:linux
+```
+
+---
+
 ## 🆘 **Soporte y Ayuda**
 
 ### **Documentación Adicional:**

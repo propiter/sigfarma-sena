@@ -1,0 +1,64 @@
+appId: "com.sena.sigfarma"
+productName: "SIGFARMA-SENA"
+copyright: "Copyright © 2025 SENA"
+
+directories:
+  output: "release"
+  buildResources: "public"
+
+files:
+  - "dist/**/*"
+  - "electron/**/*"
+  - "node_modules/**/*"
+  - "package.json"
+  - "prisma/**/*"
+  - "public/**/*"
+  - ".env"
+
+extraResources:
+  - from: "docker-compose.yml"
+    to: "docker-compose.yml"
+  - from: "Dockerfile"
+    to: "Dockerfile"
+
+win:
+  icon: "public/logos/icon.ico"
+  target:
+    - "nsis"
+  artifactName: "${productName}-Setup-${version}.${ext}"
+
+mac:
+  icon: "public/logos/icon.icns"
+  category: "public.app-category.medical"
+  target:
+    - "dmg"
+  artifactName: "${productName}-${version}.${ext}"
+
+linux:
+  icon: "public/logos/icon.png"
+  category: "Office"
+  target:
+    - "AppImage"
+    - "deb"
+  artifactName: "${productName}-${version}.${ext}"
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "SIGFARMA-SENA"
+  uninstallDisplayName: "SIGFARMA-SENA"
+
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: "link"
+      path: "/Applications"
+
+publish:
+  provider: "github"
+  releaseType: "release"

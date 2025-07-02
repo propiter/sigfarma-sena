@@ -55,6 +55,9 @@ if exist ".env" if exist "node_modules" (
             docker system prune -f
             rmdir /s /q node_modules 2>nul
             del .env 2>nul
+            echo 📋 Iniciando servicios existentes...
+            docker-compose up -d
+            goto :verify_services
         ) else (
             echo 📋 Operación cancelada
             pause
