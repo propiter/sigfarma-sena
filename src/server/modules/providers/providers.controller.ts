@@ -5,7 +5,7 @@ import { AuthRequest } from '../../core/middleware/auth.js';
 export class ProviderController {
   getProviders = async (req: AuthRequest, res: Response) => {
     try {
-      const { page = 1, limit = 20, activo = 'true', search } = req.query;
+      const { page = 1, limit = 100, activo = 'true', search } = req.query;
       const skip = (Number(page) - 1) * Number(limit);
 
       const where: any = {};
@@ -37,6 +37,11 @@ export class ProviderController {
         }),
         prisma.proveedor.count({ where })
       ]);
+
+      // Return providers array directly for simple requests
+      if (req.query.simple === 'true') {
+        return res.json(providers);
+      }
 
       res.json({
         providers,

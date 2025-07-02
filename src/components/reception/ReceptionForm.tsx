@@ -76,21 +76,35 @@ export function ReceptionForm({ onReceptionCreated }: ReceptionFormProps) {
   const fetchInitialData = async () => {
     try {
       const [providersRes, productsRes] = await Promise.all([
-        fetch('/api/providers', { credentials: 'include' }),
+        fetch('/api/providers?simple=true', { credentials: 'include' }),
         fetch('/api/products?limit=1000', { credentials: 'include' })
       ]);
 
       if (providersRes.ok) {
         const data = await providersRes.json();
-        setProviders(data);
+        // Ensure data is an array
+        if (Array.isArray(data)) {
+          setProviders(data);
+        } else {
+          console.error('Expected array of providers but got:', data);
+          setProviders([]);
+        }
+      } else {
+        console.error('Failed to fetch providers:', providersRes.statusText);
+        setProviders([]);
       }
 
       if (productsRes.ok) {
         const data = await productsRes.json();
-        setProducts(data.products);
+        setProducts(data.products || []);
+      } else {
+        console.error('Failed to fetch products:', productsRes.statusText);
+        setProducts([]);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
+      setProviders([]);
+      setProducts([]);
     }
   };
 
@@ -241,12 +255,12 @@ export function ReceptionForm({ onReceptionCreated }: ReceptionFormProps) {
                 <select
                   id="proveedor"
                   value={selectedProvider || ''}
-                  onChange={(e) => setSelectedProvider(Number(e.target.value))}
+                  onChange={(e) => setSelectedProvider(Number(e.target.value) || null)}
                   className="w-full p-2 border rounded-md bg-background text-foreground"
                   required
                 >
                   <option value="">Seleccionar proveedor</option>
-                  {providers.map(provider => (
+                  {Array.isArray(providers) && providers.map(provider => (
                     <option key={provider.proveedorId} value={provider.proveedorId}>
                       {provider.nombre} - {provider.nit}
                     </option>

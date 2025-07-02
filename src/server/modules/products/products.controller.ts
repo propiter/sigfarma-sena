@@ -20,9 +20,19 @@ export class ProductController {
           take: Number(limit),
           orderBy: { nombre: 'asc' },
           include: {
+            unidadMedida: {
+              select: { nombre: true, abreviacion: true }
+            },
             lotes: {
               where: { cantidadDisponible: { gt: 0 } },
-              select: { cantidadDisponible: true, fechaVencimiento: true }
+              orderBy: { fechaVencimiento: 'asc' },
+              select: { 
+                loteId: true,
+                numeroLote: true,
+                fechaVencimiento: true, 
+                cantidadDisponible: true,
+                precioVentaLote: true
+              }
             }
           }
         }),
@@ -51,6 +61,7 @@ export class ProductController {
       const product = await prisma.producto.findUnique({
         where: { productoId: Number(id) },
         include: {
+          unidadMedida: true,
           lotes: {
             orderBy: { fechaVencimiento: 'asc' }
           }
@@ -70,14 +81,40 @@ export class ProductController {
 
   createProduct = async (req: AuthRequest, res: Response) => {
     try {
-      const productData = req.body;
+      const { loteData, ...productData } = req.body;
       
+      // Create product
       const product = await prisma.producto.create({
         data: {
           ...productData,
           precioVentaSugerido: Number(productData.precioVentaSugerido)
         }
       });
+
+      // Create initial lot if provided
+      if (loteData && loteData.numeroLote) {
+        const alertaVencimiento = this.calculateExpirationAlert(new Date(loteData.fechaVencimiento));
+        
+        await prisma.lote.create({
+          data: {
+            productoId: product.productoId,
+            numeroLote: loteData.numeroLote,
+            fechaVencimiento: new Date(loteData.fechaVencimiento),
+            cantidadInicial: loteData.cantidadInicial,
+            cantidadDisponible: loteData.cantidadInicial,
+            precioCompra: Number(loteData.precioCompra),
+            precioVentaLote: Number(productData.precioVentaSugerido),
+            alertaVencimiento,
+            notas: loteData.notas
+          }
+        });
+
+        // Update product stock
+        await prisma.producto.update({
+          where: { productoId: product.productoId },
+          data: { stockTotal: loteData.cantidadInicial }
+        });
+      }
 
       // Log creation
       await prisma.historialCambio.create({
@@ -170,6 +207,9 @@ export class ProductController {
         take: Number(limit),
         orderBy: { nombre: 'asc' },
         include: {
+          unidadMedida: {
+            select: { nombre: true, abreviacion: true }
+          },
           lotes: {
             where: { cantidadDisponible: { gt: 0 } },
             orderBy: { fechaVencimiento: 'asc' },
@@ -208,4 +248,16 @@ export class ProductController {
       res.status(500).json({ message: 'Error al obtener lotes del producto' });
     }
   };
+
+  private calculateExpirationAlert(fechaVencimiento: Date): 'Vencido' | 'Rojo' | 'Amarillo' | 'Naranja' | 'Verde' {
+    const now = new Date();
+    const diffTime = fechaVencimiento.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return 'Vencido';
+    if (diffDays <= 180) return 'Rojo';
+    if (diffDays <= 365) return 'Amarillo';
+    if (diffDays <= 730) return 'Naranja';
+    return 'Verde';
+  }
 }

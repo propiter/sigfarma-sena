@@ -13,6 +13,7 @@ import { settingsRoutes } from './modules/settings/settings.routes.js';
 import { notificationRoutes } from './modules/notifications/notifications.routes.js';
 import { providerRoutes } from './modules/providers/providers.routes.js';
 import { orderRoutes } from './modules/orders/orders.routes.js';
+import { unitsRoutes } from './modules/units/units.routes.js';
 import { errorHandler } from './core/middleware/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -45,6 +46,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/providers', providerRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/units', unitsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
