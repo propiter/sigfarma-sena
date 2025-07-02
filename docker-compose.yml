@@ -12,9 +12,10 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
 
@@ -29,11 +30,12 @@ services:
     environment:
       DATABASE_URL: "postgresql://postgres:postgres@database:5432/sigfarma_sena"
       NODE_ENV: production
-      JWT_SECRET: "your-super-secret-jwt-key-change-in-production"
+      JWT_SECRET: "sigfarma-sena-jwt-secret-2025-production"
       JWT_EXPIRES_IN: "7d"
       PORT: 3000
     volumes:
       - ./uploads:/app/uploads
+      - ./public/logos:/app/public/logos
 
   adminer:
     image: adminer:4.8.1

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/store/authStore';
-import { AlertCircle, Building2 } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 export function Login() {
   const [correo, setCorreo] = useState('');
@@ -51,8 +51,12 @@ export function Login() {
       <div className="w-full max-w-md">
         {/* SENA Branding */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-500 rounded-xl mb-4">
-            <Building2 className="w-8 h-8 text-white" />
+          <div className="flex justify-center mb-4">
+            <img 
+              src="logos/logo.png"  
+              alt="Logo" 
+              className="h-16 w-auto"
+            />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">SIGFARMA-SENA</h1>
           <p className="text-gray-600">Sistema Integral de Gestión Farmacéutica</p>
@@ -119,15 +123,13 @@ export function Login() {
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h3 className="text-sm font-medium text-blue-900 mb-2">Credenciales de Demostración:</h3>
           <div className="text-xs text-blue-700 space-y-1">
-            <div>👤 <strong>Administrador:</strong> admin@farmacia.com / admin123</div>
-            <div>👤 <strong>Cajero:</strong> cajero@farmacia.com / cajero123</div>
-            <div>👤 <strong>Inventario:</strong> inventario@farmacia.com / inventario123</div>
+            <div>👤 <strong>Administrador:</strong> admin@farmacia.com / admin123 <p className="text-xs text-blue-700 text-center">cambia la contraseña al iniciar sesión </p></div>
           </div>
         </div>
 
         <div className="text-center mt-6 text-xs text-gray-500">
           <p>© 2025 SENA - Todos los derechos reservados</p>
-          <p>Sistema desarrollado para fines educativos</p>
+          
         </div>
       </div>
     </div>
