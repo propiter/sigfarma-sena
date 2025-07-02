@@ -23,9 +23,6 @@ export function OrdersHeader({
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             Órdenes de Compra
           </h1>
-          <Badge variant="outline" className="hidden sm:inline-flex">
-            SIGFARMA-SENA
-          </Badge>
         </div>
         <p className="text-muted-foreground">
           Gestiona órdenes de compra y seguimiento de entregas

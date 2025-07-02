@@ -64,7 +64,7 @@ if (process.env.NODE_ENV === 'production') {
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`🚀 SIGFARMA-SENA Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🎨 Theme: Configurable (Light/Dark mode available)`);
 });

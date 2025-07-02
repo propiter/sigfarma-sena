@@ -3,10 +3,14 @@ import { Building2, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuthStore } from '@/store/authStore';
+import { useSettingsStore } from '@/store/settingsStore';
 
 export function WelcomeHeader() {
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
+  const { settings } = useSettingsStore();
+
+  const farmaciaName = settings?.nombre_farmacia?.valor || 'SENA';
 
   const currentDate = new Date().toLocaleDateString('es-CO', { 
     weekday: 'long', 
@@ -23,7 +27,7 @@ export function WelcomeHeader() {
             Panel de Control
           </h1>
           <Badge variant="outline" className="hidden sm:inline-flex">
-            SIGFARMA-SENA
+           {farmaciaName}
           </Badge>
         </div>
         <p className="text-muted-foreground">

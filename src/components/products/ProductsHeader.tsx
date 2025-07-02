@@ -17,9 +17,7 @@ export function ProductsHeader({ onCreateProduct, onRefresh, canManageProducts }
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             Gestión de Productos
           </h1>
-          <Badge variant="outline" className="hidden sm:inline-flex">
-            SIGFARMA-SENA
-          </Badge>
+          
         </div>
         <p className="text-muted-foreground">
           Catálogo completo de medicamentos y productos farmacéuticos

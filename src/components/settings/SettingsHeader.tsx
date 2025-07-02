@@ -18,9 +18,7 @@ export function SettingsHeader({ hasChanges, isSaving, onSave, onReset }: Settin
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             Configuración del Sistema
           </h1>
-          <Badge variant="outline" className="hidden sm:inline-flex">
-            SIGFARMA-SENA
-          </Badge>
+          
         </div>
         <p className="text-muted-foreground">
           Personaliza y configura el comportamiento del sistema
