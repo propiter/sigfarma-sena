@@ -12,20 +12,50 @@ echo.
 REM Verificar si Docker está instalado
 docker --version >nul 2>&1
 if errorlevel 1 (
-    echo ❌ Docker no está instalado. Por favor instala Docker Desktop primero:
-    echo    https://www.docker.com/products/docker-desktop
-    pause
-    exit /b 1
+    echo ❌ Docker no está instalado. Intentando instalar Docker Desktop automáticamente...
+    
+    REM Descargar Docker Desktop
+    powershell -Command "Invoke-WebRequest -Uri https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe -OutFile DockerInstaller.exe"
+
+    REM Instalar silenciosamente
+    echo 📦 Ejecutando instalador...
+    start /wait DockerInstaller.exe install --quiet
+
+    REM Verificar nuevamente
+    docker --version >nul 2>&1
+    if errorlevel 1 (
+        echo ❌ La instalación automática falló o requiere reinicio.
+        echo 🔧 Por favor instala Docker Desktop manualmente desde:
+        echo    https://www.docker.com/products/docker-desktop
+        pause
+        exit /b 1
+    ) else (
+        echo ✅ Docker instalado correctamente
+    )
+) else (
+    echo ✅ Docker ya está instalado
 )
 
-REM Verificar si Docker Compose está instalado
-docker-compose --version >nul 2>&1
+REM Verificar si Docker Compose está disponible (a través de docker compose v2)
+docker compose version >nul 2>&1
 if errorlevel 1 (
-    echo ❌ Docker Compose no está instalado. Por favor instala Docker Desktop primero:
-    echo    https://www.docker.com/products/docker-desktop
-    pause
-    exit /b 1
+    echo ❌ Docker Compose no está disponible o no es compatible.
+
+    echo 📦 Verificando si Docker Compose clásico está disponible...
+    docker-compose --version >nul 2>&1
+    if errorlevel 1 (
+        echo ❌ Docker Compose clásico tampoco está instalado.
+        echo 🔧 Intenta actualizar Docker Desktop o instalar Docker Compose manualmente:
+        echo    https://docs.docker.com/compose/install/
+        pause
+        exit /b 1
+    ) else (
+        echo ✅ Docker Compose clásico encontrado
+    )
+) else (
+    echo ✅ Docker Compose v2 disponible
 )
+
 
 echo ✅ Docker y Docker Compose están instalados
 
@@ -43,15 +73,17 @@ if exist ".env" if exist "node_modules" (
     
     if "!choice!"=="1" (
         echo 📋 Iniciando servicios existentes...
-        docker-compose up -d
-        goto :verify_services
+        docker compose build
+        docker compose up -d
+
+        goto :db_setup
     ) else if "!choice!"=="2" (
         echo.
         echo ⚠️  ADVERTENCIA: Esto borrará TODOS los datos existentes
         set /p confirm="¿Estás seguro? Escribe 'BORRAR' para confirmar: "
         if "!confirm!"=="BORRAR" (
             echo 📋 Eliminando instalación anterior...
-            docker-compose down -v
+            docker compose down -v
             docker system prune -f
             rmdir /s /q node_modules 2>nul
             del .env 2>nul
@@ -115,17 +147,20 @@ if not exist "node_modules" (
 
 REM Iniciar servicios con Docker
 echo 📋 Iniciando servicios...
-docker-compose up -d
+docker compose build
+docker compose up -d
 
+
+:db_setup
 REM Esperar a que la base de datos esté lista
 echo 📋 Esperando a que la base de datos esté lista...
 timeout /t 10 /nobreak >nul
 
 REM Generar cliente Prisma
 echo 📋 Configurando base de datos...
-npx prisma generate
+call npx prisma generate
 
-REM Verificar si la base de datos existe y tiene tablas
+REM Verificar si la base de datos existe
 echo 📋 Verificando base de datos...
 docker-compose exec -T database psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname = 'sigfarma_sena'" | findstr /C:"1" >nul
 if errorlevel 1 (
@@ -133,43 +168,56 @@ if errorlevel 1 (
     docker-compose exec -T database psql -U postgres -c "CREATE DATABASE sigfarma_sena"
 )
 
-REM Verificar si hay tablas en la base de datos
-set DB_EMPTY=0
-docker-compose exec -T database psql -U postgres -d sigfarma_sena -c "\dt" | findstr /C:"0 rows" >nul
-if not errorlevel 1 (
-    set DB_EMPTY=1
-)
+REM Esperar a que la base de datos esté completamente lista
+echo 📋 Esperando a que la base de datos esté lista...
+docker-compose exec -T database bash -c "until pg_isready -U postgres -d sigfarma_sena; do sleep 2; echo 'Esperando a que la base de datos esté lista...'; done"
 
-REM Ejecutar migraciones si la base de datos está vacía
-if !DB_EMPTY!==1 (
-    echo 📋 Aplicando esquema de base de datos...
-    npx prisma db push --accept-data-loss
-    
-    echo 📋 Cargando datos iniciales...
-    npx prisma db seed
-    echo ✅ Base de datos inicializada con datos de ejemplo
-) else (
-    echo ✅ Base de datos ya contiene datos
-)
-
-REM Construir la aplicación
-echo 📋 Construyendo aplicación...
-npm run build
+REM Verificar si existe algún usuario administrador
+echo 📋 Verificando si existe un usuario administrador...
+docker-compose exec -T database psql -U postgres -d sigfarma_sena -c "SELECT 1 FROM usuarios WHERE rol = 'administrador' LIMIT 1;" | findstr /C:"1" >nul
 if errorlevel 1 (
-    echo ❌ Error construyendo la aplicación
-    pause
-    exit /b 1
+    echo 📋 No existe usuario administrador, aplicando migraciones y seeders...
+
+    docker-compose stop app >nul 2>&1
+
+    REM Ejecutar migraciones dentro del contenedor de la aplicación
+    docker-compose run --rm app npx prisma migrate dev --name init --skip-seed
+
+    REM Ejecutar seeders
+    docker-compose run --rm app npm run db:seed
+
+    echo ✅ Migraciones y seeders aplicados
+) else (
+    echo ✅ Ya existe un usuario administrador, omitiendo seeders
 )
+
+
+REM (Re)iniciar la aplicación para asegurar que toma los cambios
+echo 📋 Reiniciando la aplicación para aplicar cambios...
+docker compose restart app adminer
+
+REM Construcción local no necesaria, ya se construyó en Docker
+REM echo 📋 Construyendo aplicación...
+REM npm run build
+REM if errorlevel 1 (
+REM     echo ❌ Error construyendo la aplicación
+REM     pause
+REM     exit /b 1
+REM )
+
 
 :verify_services
 REM Verificar que los servicios estén funcionando
 echo 📋 Verificando servicios...
 timeout /t 5 /nobreak >nul
 
-REM Iniciar la aplicación
-echo 📋 Iniciando aplicación...
+REM Iniciar navegador
+echo 📋 Abriendo aplicación en navegador...
 start "" http://localhost:3000
-npm start
+
+REM La app ya corre en Docker, no ejecutar localmente
+REM npm start
+
 
 echo.
 echo 🎉 ¡INSTALACIÓN COMPLETADA EXITOSAMENTE!
@@ -203,4 +251,30 @@ echo 📊 Ver logs: docker-compose logs -f
 echo.
 echo 📚 Para más información, consulta el README.md
 echo.
+REM Crear acceso directo para abrir SIGFARMA al iniciar Windows
+echo 📋 Verificando si ya existe acceso directo de inicio automático...
+REM Crear acceso directo en el escritorio y en inicio automático
+
+set "shortcut_name=SIGFARMA-SENA"
+set "shortcut_url=http://localhost:3000"
+
+set "desktop_path=%USERPROFILE%\Desktop"
+set "startup_path=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
+
+if not exist "%desktop_path%\%shortcut_name%.url" (
+    echo [InternetShortcut] > "%desktop_path%\%shortcut_name%.url"
+    echo URL=%shortcut_url% >> "%desktop_path%\%shortcut_name%.url"
+    echo ✅ Acceso directo creado en el escritorio
+) else (
+    echo ℹ️  Ya existe el acceso directo en el escritorio
+)
+
+if not exist "%startup_path%\%shortcut_name%.url" (
+    echo [InternetShortcut] > "%startup_path%\%shortcut_name%.url"
+    echo URL=%shortcut_url% >> "%startup_path%\%shortcut_name%.url"
+    echo ✅ Acceso directo creado en inicio automático
+) else (
+    echo ℹ️  Ya existe el acceso directo en inicio automático
+)
+
 pause

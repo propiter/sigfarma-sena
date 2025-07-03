@@ -8,7 +8,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install dependencies
-RUN npm ci
+RUN npm ci && npx tsx --version
 
 # Copy source code
 COPY . .
