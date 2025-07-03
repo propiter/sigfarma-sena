@@ -31,6 +31,8 @@ model Usuario {
   actasRecepcionAprobadas ActaRecepcion[] @relation("UsuarioAprobador")
   historialCambios HistorialCambio[]
   ordenesCompra   OrdenCompra[]
+  bajasCreadas    BajaInventario[] @relation("UsuarioSolicitante")
+  bajasAprobadas  BajaInventario[] @relation("UsuarioAprobador")
 
   @@map("usuarios")
 }
@@ -113,6 +115,7 @@ model Lote {
   producto            Producto @relation(fields: [productoId], references: [productoId], onDelete: Cascade)
   detalleVenta        DetalleVenta[]
   detalleActaRecepcion DetalleActaRecepcion[] @relation("LoteCreado")
+  bajasInventario     BajaInventario[]
 
   @@unique([productoId, numeroLote])
   @@index([fechaVencimiento])
@@ -204,6 +207,27 @@ model DetalleActaRecepcion {
   loteCreado                 Lote? @relation("LoteCreado", fields: [loteCreadoId], references: [loteId])
 
   @@map("detalle_acta_recepcion")
+}
+
+model BajaInventario {
+  bajaId              Int      @id @default(autoincrement()) @map("baja_id")
+  loteId              Int      @map("lote_id")
+  usuarioId           Int      @map("usuario_id")
+  usuarioAprobadorId  Int?     @map("usuario_aprobador_id")
+  fechaSolicitud      DateTime @default(now()) @map("fecha_solicitud")
+  fechaAprobacion     DateTime? @map("fecha_aprobacion")
+  cantidad            Int
+  motivo              String   // vencimiento, deterioro, error_ingreso, devolucion_proveedor, retiro_mercado, otro
+  observaciones       String?
+  observacionesAprobador String? @map("observaciones_aprobador")
+  estado              String   @default("Pendiente") // Pendiente, Aprobada, Rechazada
+
+  // Relations
+  lote                Lote     @relation(fields: [loteId], references: [loteId])
+  usuario             Usuario  @relation("UsuarioSolicitante", fields: [usuarioId], references: [usuarioId])
+  usuarioAprobador    Usuario? @relation("UsuarioAprobador", fields: [usuarioAprobadorId], references: [usuarioId])
+
+  @@map("bajas_inventario")
 }
 
 model NotificacionReabastecimiento {
@@ -324,6 +348,7 @@ enum TipoNotificacion {
   ProductoVencido @map("producto_vencido")
   ReabastecimientoSugerido @map("reabastecimiento_sugerido")
   ActaPendienteAprobacion @map("acta_pendiente_aprobacion")
+  BajaPendienteAprobacion @map("baja_pendiente_aprobacion")
 }
 
 enum Prioridad {

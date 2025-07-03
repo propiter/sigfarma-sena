@@ -11,6 +11,7 @@ import { Notifications } from '@/pages/Notifications';
 import { Reception } from '@/pages/Reception';
 import { Providers } from '@/pages/Providers';
 import { Orders } from '@/pages/Orders';
+import { BajasInventario } from '@/pages/BajasInventario';
 import { Layout } from '@/components/Layout';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
           <Route path="users" element={<Users />} />
           <Route path="settings" element={<Settings />} />
           <Route path="notifications" element={<Notifications />} />
+          <Route path="bajas-inventario" element={<BajasInventario />} />
         </Route>
       </Routes>
     </Router>

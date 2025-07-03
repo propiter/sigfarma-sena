@@ -133,10 +133,10 @@ export function Orders() {
         showSuccessMessage('Orden de compra creada exitosamente');
       } else {
         const error = await response.json();
-        throw new Error(error.message);
+        showErrorMessage(error.message);
       }
     } catch (error: any) {
-      throw new Error(error.message || 'Error al crear la orden');
+      showErrorMessage(error.message || 'Error al crear la orden');
     }
   };
 

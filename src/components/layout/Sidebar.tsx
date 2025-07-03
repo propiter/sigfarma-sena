@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingsStore } from '@/store/settingsStore';
+import { useNotificationStore } from '@/store/notificationStore';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
+  Building2, 
   LayoutDashboard,
   ShoppingCart,
   Package,
@@ -16,7 +18,8 @@ import {
   Bell,
   Truck,
   Building,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 
 const navigation = [
@@ -27,6 +30,7 @@ const navigation = [
   { name: 'Proveedores', href: '/providers', icon: Building, roles: ['administrador', 'inventario'] },
   { name: 'Órdenes de Compra', href: '/orders', icon: Truck, roles: ['administrador', 'inventario'] },
   { name: 'Recepciones', href: '/reception', icon: Activity, roles: ['administrador', 'inventario'] },
+  { name: 'Bajas de Inventario', href: '/bajas-inventario', icon: Trash2, roles: ['administrador', 'inventario'] },
   { name: 'Reportes', href: '/reports', icon: FileText, roles: ['administrador', 'cajero', 'inventario'] },
   { name: 'Notificaciones', href: '/notifications', icon: Bell, roles: ['administrador', 'cajero', 'inventario'] },
   { name: 'Usuarios', href: '/users', icon: Users, roles: ['administrador'] },
@@ -41,9 +45,15 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user, logout } = useAuthStore();
   const { settings } = useSettingsStore();
+  const { unreadCount, fetchNotifications } = useNotificationStore();
   const navigate = useNavigate();
   const location = useLocation();
-  const [notifications] = useState(0); // TODO: Connect to notifications store
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user, fetchNotifications]);
 
   const handleLogout = async () => {
     try {
@@ -85,11 +95,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-3">
-              <img 
-                src="logos/logo.png" 
-                alt="Logo" 
-                className="h-8 w-auto"
-              />
+              <div className="flex items-center justify-center w-8 h-8 bg-orange-500 rounded-lg">
+                <Building2 className="w-5 h-5 text-white" />
+              </div>
               <div>
                 <div className="text-lg font-bold text-gray-900 dark:text-white">
                   {farmaciaName}
@@ -138,9 +146,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 >
                   <item.icon className="w-5 h-5" />
                   <span className="flex-1 text-left">{item.name}</span>
-                  {item.name === 'Notificaciones' && notifications > 0 && (
+                  {item.name === 'Notificaciones' && unreadCount > 0 && (
                     <Badge variant="destructive" className="text-xs px-1.5 py-0.5 min-w-[1.25rem] h-5">
-                      {notifications > 99 ? '99+' : notifications}
+                      {unreadCount > 99 ? '99+' : unreadCount}
                     </Badge>
                   )}
                 </button>

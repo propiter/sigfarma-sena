@@ -23,6 +23,7 @@ import {
   Shield,
   Activity
 } from 'lucide-react';
+import { showSuccessMessage, showErrorMessage } from '@/lib/notifications';
 
 export interface User {
   usuarioId: number;
@@ -109,7 +110,7 @@ export function Users() {
         setActiveTab('list');
       } else {
         const error = await response.json();
-        throw new Error(error.message);
+        showErrorMessage(error.message);
       }
     } catch (error) {
       console.error('Error creating user:', error);

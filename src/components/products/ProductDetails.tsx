@@ -12,16 +12,18 @@ import {
   Barcode,
   Calendar,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  Trash2
 } from 'lucide-react';
 
 interface ProductDetailsProps {
   product: any;
   onEdit: () => void;
+  onDarDeBaja: (lote: any) => void;
   canManageProducts: boolean;
 }
 
-export function ProductDetails({ product, onEdit, canManageProducts }: ProductDetailsProps) {
+export function ProductDetails({ product, onEdit, onDarDeBaja, canManageProducts }: ProductDetailsProps) {
   const getStockStatusColor = (current: number, minimum: number) => {
     if (current === 0) return 'text-red-600 dark:text-red-400';
     if (current <= minimum) return 'text-orange-600 dark:text-orange-400';
@@ -218,6 +220,23 @@ export function ProductDetails({ product, onEdit, canManageProducts }: ProductDe
                         </p>
                       </div>
                     </div>
+                    
+                    {canManageProducts && lote.cantidadDisponible > 0 && (
+                      <div className="mt-2 flex justify-end">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDarDeBaja({...lote, producto: product});
+                          }}
+                        >
+                          <Trash2 className="w-3 h-3 mr-1" />
+                          Dar de Baja
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
                 

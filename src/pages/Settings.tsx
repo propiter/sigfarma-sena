@@ -7,6 +7,7 @@ import { InventorySettings } from '@/components/settings/InventorySettings';
 import { AppearanceSettings } from '@/components/settings/AppearanceSettings';
 import { SecuritySettings } from '@/components/settings/SecuritySettings';
 import { Settings as SettingsIcon, Building2, Package, Palette, Shield } from 'lucide-react';
+import { showSuccessMessage, showErrorMessage, showWarningMessage } from '@/lib/notifications';
 
 export function Settings() {
   const { user } = useAuthStore();
@@ -70,7 +71,7 @@ export function Settings() {
         setHasChanges(false);
         // Show success message
       } else {
-        throw new Error('Error al guardar configuración');
+        showErrorMessage('Error al guardar configuración');
       }
     } catch (error) {
       console.error('Error saving settings:', error);
