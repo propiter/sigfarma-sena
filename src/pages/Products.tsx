@@ -7,8 +7,8 @@ import { ProductsList } from '@/components/products/ProductsList';
 import { ProductDetails } from '@/components/products/ProductDetails';
 import { ProductForm } from '@/components/products/ProductForm';
 import { ProductsStats } from '@/components/products/ProductsStats';
-import { Package, Plus, Eye } from 'lucide-react';
-import { showSuccessMessage } from '@/lib/notifications';
+import { Package, Plus, Eye, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Product {
   productoId: number;
@@ -39,6 +39,7 @@ interface Product {
 
 export function Products() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,7 +109,7 @@ export function Products() {
         await fetchProducts();
         setShowCreateForm(false);
         setActiveTab('list');
-        showSuccessMessage('Producto creado exitosamente');
+        alert('Producto creado exitosamente');
       } else {
         const error = await response.json();
         throw new Error(error.message);
@@ -133,7 +134,7 @@ export function Products() {
         await fetchProducts();
         setShowEditForm(false);
         setActiveTab('details');
-        showSuccessMessage('Producto actualizado exitosamente');
+        alert('Producto actualizado exitosamente');
       } else {
         const error = await response.json();
         throw new Error(error.message);
@@ -141,6 +142,10 @@ export function Products() {
     } catch (error: any) {
       throw new Error(error.message || 'Error al actualizar el producto');
     }
+  };
+
+  const handleDarDeBaja = (lote: any) => {
+    navigate('/bajas-inventario', { state: { lote } });
   };
 
   const handleRefresh = () => {
@@ -234,6 +239,7 @@ export function Products() {
                 setShowEditForm(true);
                 setActiveTab('edit');
               }}
+              onDarDeBaja={handleDarDeBaja}
               canManageProducts={canManageProducts}
             />
           ) : (

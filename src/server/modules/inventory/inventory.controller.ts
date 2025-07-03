@@ -13,6 +13,14 @@ interface ReceptionItem {
   notas?: string;
 }
 
+interface BajaItem {
+  loteId: number;
+  cantidad: number;
+  motivo: string;
+  observaciones?: string;
+  requiereAprobacion: boolean;
+}
+
 export class InventoryController {
   createReception = async (req: AuthRequest, res: Response) => {
     try {
@@ -401,6 +409,372 @@ export class InventoryController {
     }
   };
 
+  // Bajas de inventario
+  createBaja = async (req: AuthRequest, res: Response) => {
+    try {
+      const { 
+        loteId, 
+        cantidad, 
+        motivo, 
+        observaciones, 
+        requiereAprobacion = true 
+      }: BajaItem = req.body;
+
+      // Validar que el usuario tenga permisos
+      if (!['administrador', 'inventario'].includes(req.user!.rol)) {
+        return res.status(403).json({ message: 'No tienes permisos para dar de baja productos' });
+      }
+
+      // Validar que el lote exista y tenga suficiente stock
+      const lote = await prisma.lote.findUnique({
+        where: { loteId: Number(loteId) },
+        include: { producto: true }
+      });
+
+      if (!lote) {
+        return res.status(404).json({ message: 'Lote no encontrado' });
+      }
+
+      if (lote.cantidadDisponible < cantidad) {
+        return res.status(400).json({ message: `Stock insuficiente. Disponible: ${lote.cantidadDisponible}` });
+      }
+
+      // Si no requiere aprobación y el usuario es administrador, procesar inmediatamente
+      if (!requiereAprobacion && req.user!.rol === 'administrador') {
+        // Procesar baja inmediatamente
+        await prisma.$transaction(async (tx) => {
+          // Crear registro de baja
+          const baja = await tx.bajaInventario.create({
+            data: {
+              loteId: Number(loteId),
+              usuarioId: req.user!.usuarioId,
+              cantidad,
+              motivo,
+              observaciones,
+              estado: 'Aprobada',
+              usuarioAprobadorId: req.user!.usuarioId,
+              fechaAprobacion: new Date()
+            }
+          });
+
+          // Actualizar stock del lote
+          await tx.lote.update({
+            where: { loteId: Number(loteId) },
+            data: { cantidadDisponible: { decrement: cantidad } }
+          });
+
+          // Actualizar stock total del producto
+          await tx.producto.update({
+            where: { productoId: lote.productoId },
+            data: { stockTotal: { decrement: cantidad } }
+          });
+
+          // Log baja
+          await tx.historialCambio.create({
+            data: {
+              usuarioId: req.user!.usuarioId,
+              accion: `Baja de inventario #${baja.bajaId} procesada directamente`,
+              detalles: { 
+                bajaId: baja.bajaId,
+                loteId: lote.loteId,
+                producto: lote.producto.nombre,
+                cantidad,
+                motivo
+              }
+            }
+          });
+
+          return baja;
+        });
+
+        return res.status(201).json({ 
+          message: 'Baja de inventario procesada exitosamente',
+          requirioAprobacion: false
+        });
+      } else {
+        // Crear solicitud de baja pendiente de aprobación
+        const baja = await prisma.bajaInventario.create({
+          data: {
+            loteId: Number(loteId),
+            usuarioId: req.user!.usuarioId,
+            cantidad,
+            motivo,
+            observaciones,
+            estado: 'Pendiente'
+          },
+          include: {
+            lote: {
+              include: {
+                producto: { select: { nombre: true } }
+              }
+            },
+            usuario: { select: { nombre: true } }
+          }
+        });
+
+        // Log solicitud
+        await prisma.historialCambio.create({
+          data: {
+            usuarioId: req.user!.usuarioId,
+            accion: `Solicitud de baja #${baja.bajaId} creada - Pendiente de aprobación`,
+            detalles: { 
+              bajaId: baja.bajaId,
+              loteId: lote.loteId,
+              producto: lote.producto.nombre,
+              cantidad,
+              motivo
+            }
+          }
+        });
+
+        // Crear notificación para administradores
+        await this.createBajaApprovalNotification(baja.bajaId, lote.producto.nombre);
+
+        return res.status(201).json({ 
+          message: 'Solicitud de baja creada exitosamente. Pendiente de aprobación por un administrador.',
+          baja
+        });
+      }
+    } catch (error) {
+      console.error('Error creating baja:', error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : 'Error al crear baja de inventario'
+      });
+    }
+  };
+
+  getBajas = async (req: AuthRequest, res: Response) => {
+    try {
+      const { page = 1, limit = 20, estado } = req.query;
+      const skip = (Number(page) - 1) * Number(limit);
+
+      const where: any = {};
+      if (estado) {
+        where.estado = estado;
+      }
+
+      const [bajas, total] = await Promise.all([
+        prisma.bajaInventario.findMany({
+          where,
+          skip,
+          take: Number(limit),
+          orderBy: { fechaSolicitud: 'desc' },
+          include: {
+            lote: {
+              include: {
+                producto: { select: { nombre: true, presentacion: true } }
+              }
+            },
+            usuario: { select: { nombre: true } },
+            usuarioAprobador: { select: { nombre: true } }
+          }
+        }),
+        prisma.bajaInventario.count({ where })
+      ]);
+
+      res.json({
+        bajas,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total,
+          pages: Math.ceil(total / Number(limit))
+        }
+      });
+    } catch (error) {
+      console.error('Error getting bajas:', error);
+      res.status(500).json({ message: 'Error al obtener bajas de inventario' });
+    }
+  };
+
+  getBaja = async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      
+      const baja = await prisma.bajaInventario.findUnique({
+        where: { bajaId: Number(id) },
+        include: {
+          lote: {
+            include: {
+              producto: true
+            }
+          },
+          usuario: { select: { nombre: true, correo: true } },
+          usuarioAprobador: { select: { nombre: true, correo: true } }
+        }
+      });
+
+      if (!baja) {
+        return res.status(404).json({ message: 'Baja de inventario no encontrada' });
+      }
+
+      res.json(baja);
+    } catch (error) {
+      console.error('Error getting baja:', error);
+      res.status(500).json({ message: 'Error al obtener baja de inventario' });
+    }
+  };
+
+  getPendingBajas = async (req: AuthRequest, res: Response) => {
+    try {
+      // Solo administradores pueden ver bajas pendientes
+      if (req.user!.rol !== 'administrador') {
+        return res.status(403).json({ message: 'No tienes permisos para ver bajas pendientes' });
+      }
+
+      const pendingBajas = await prisma.bajaInventario.findMany({
+        where: { estado: 'Pendiente' },
+        orderBy: { fechaSolicitud: 'asc' },
+        include: {
+          lote: {
+            include: {
+              producto: { select: { nombre: true, presentacion: true } }
+            }
+          },
+          usuario: { select: { nombre: true } }
+        }
+      });
+
+      res.json(pendingBajas);
+    } catch (error) {
+      console.error('Error getting pending bajas:', error);
+      res.status(500).json({ message: 'Error al obtener bajas pendientes' });
+    }
+  };
+
+  approveBaja = async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { observacionesAprobador } = req.body;
+
+      // Validar que el usuario sea administrador
+      if (req.user!.rol !== 'administrador') {
+        return res.status(403).json({ message: 'Solo los administradores pueden aprobar bajas' });
+      }
+
+      const baja = await prisma.bajaInventario.findUnique({
+        where: { bajaId: Number(id) },
+        include: {
+          lote: true
+        }
+      });
+
+      if (!baja) {
+        return res.status(404).json({ message: 'Baja de inventario no encontrada' });
+      }
+
+      if (baja.estado !== 'Pendiente') {
+        return res.status(400).json({ message: 'La baja ya ha sido procesada' });
+      }
+
+      // Validar que el lote tenga suficiente stock
+      if (baja.lote.cantidadDisponible < baja.cantidad) {
+        return res.status(400).json({ 
+          message: `Stock insuficiente. Disponible: ${baja.lote.cantidadDisponible}, Solicitado: ${baja.cantidad}` 
+        });
+      }
+
+      // Procesar la aprobación en una transacción
+      const result = await prisma.$transaction(async (tx) => {
+        // Actualizar la baja
+        const updatedBaja = await tx.bajaInventario.update({
+          where: { bajaId: Number(id) },
+          data: {
+            estado: 'Aprobada',
+            usuarioAprobadorId: req.user!.usuarioId,
+            fechaAprobacion: new Date(),
+            observacionesAprobador
+          }
+        });
+
+        // Actualizar stock del lote
+        await tx.lote.update({
+          where: { loteId: baja.loteId },
+          data: { cantidadDisponible: { decrement: baja.cantidad } }
+        });
+
+        // Actualizar stock total del producto
+        await tx.producto.update({
+          where: { productoId: baja.lote.productoId },
+          data: { stockTotal: { decrement: baja.cantidad } }
+        });
+
+        return updatedBaja;
+      });
+
+      // Log approval
+      await prisma.historialCambio.create({
+        data: {
+          usuarioId: req.user!.usuarioId,
+          accion: `Baja de inventario #${id} aprobada y procesada`,
+          detalles: { 
+            bajaId: Number(id),
+            aprobadaPor: req.user!.nombre,
+            observaciones: observacionesAprobador
+          }
+        }
+      });
+
+      res.json({ message: 'Baja aprobada y procesada exitosamente', baja: result });
+    } catch (error) {
+      console.error('Error approving baja:', error);
+      res.status(500).json({ message: 'Error al aprobar baja de inventario' });
+    }
+  };
+
+  rejectBaja = async (req: AuthRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { observacionesAprobador, motivo } = req.body;
+
+      // Validar que el usuario sea administrador
+      if (req.user!.rol !== 'administrador') {
+        return res.status(403).json({ message: 'Solo los administradores pueden rechazar bajas' });
+      }
+
+      const baja = await prisma.bajaInventario.findUnique({
+        where: { bajaId: Number(id) }
+      });
+
+      if (!baja) {
+        return res.status(404).json({ message: 'Baja de inventario no encontrada' });
+      }
+
+      if (baja.estado !== 'Pendiente') {
+        return res.status(400).json({ message: 'La baja ya ha sido procesada' });
+      }
+
+      const updatedBaja = await prisma.bajaInventario.update({
+        where: { bajaId: Number(id) },
+        data: {
+          estado: 'Rechazada',
+          usuarioAprobadorId: req.user!.usuarioId,
+          fechaAprobacion: new Date(),
+          observacionesAprobador: `RECHAZADA: ${motivo}\n\n${observacionesAprobador || ''}`
+        }
+      });
+
+      // Log rejection
+      await prisma.historialCambio.create({
+        data: {
+          usuarioId: req.user!.usuarioId,
+          accion: `Baja de inventario #${id} rechazada`,
+          detalles: { 
+            bajaId: Number(id),
+            rechazadaPor: req.user!.nombre,
+            motivo,
+            observaciones: observacionesAprobador
+          }
+        }
+      });
+
+      res.json({ message: 'Baja rechazada exitosamente', baja: updatedBaja });
+    } catch (error) {
+      console.error('Error rejecting baja:', error);
+      res.status(500).json({ message: 'Error al rechazar baja de inventario' });
+    }
+  };
+
   // Métodos auxiliares
   private calculateExpirationAlert(fechaVencimiento: Date): 'Vencido' | 'Rojo' | 'Amarillo' | 'Naranja' | 'Verde' {
     const now = new Date();
@@ -425,7 +799,7 @@ export class InventoryController {
       });
 
       // Crear notificación para cada administrador
-      for (const _admin of administrators) {
+      for (const admin of administrators) {
         await prisma.notificacionReabastecimiento.create({
           data: {
             productoId: 1, // Temporal, necesitaríamos una tabla de notificaciones generales
@@ -440,7 +814,33 @@ export class InventoryController {
     }
   }
 
-  getExpiringLotes = async (_req: AuthRequest, res: Response) => {
+  private async createBajaApprovalNotification(bajaId: number, nombreProducto: string) {
+    try {
+      // Obtener todos los administradores
+      const administrators = await prisma.usuario.findMany({
+        where: { 
+          rol: 'administrador',
+          activo: true 
+        }
+      });
+
+      // Crear notificación para cada administrador
+      for (const admin of administrators) {
+        await prisma.notificacionReabastecimiento.create({
+          data: {
+            productoId: 1, // Temporal, necesitaríamos una tabla de notificaciones generales
+            tipoNotificacion: 'BajaPendienteAprobacion',
+            mensaje: `Nueva solicitud de baja #${bajaId} para ${nombreProducto} pendiente de aprobación`,
+            prioridad: 'Alta'
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error creating baja approval notification:', error);
+    }
+  }
+
+  getExpiringLotes = async (req: AuthRequest, res: Response) => {
     try {
       const now = new Date();
       const alertaRojaDias = 180;
@@ -482,7 +882,7 @@ export class InventoryController {
     }
   };
 
-  getLowStockProducts = async (_req: AuthRequest, res: Response) => {
+  getLowStockProducts = async (req: AuthRequest, res: Response) => {
     try {
       const products = await prisma.producto.findMany({
         where: {
