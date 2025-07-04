@@ -47,9 +47,9 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-muted flex items-center justify-center p-4 transition-colors">
       <div className="w-full max-w-md">
-        {/* SENA Branding */}
+        {/* Branding */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <img 
@@ -58,16 +58,22 @@ export function Login() {
               className="h-16 w-auto"
             />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">SIGFARMA-SENA</h1>
-          <p className="text-gray-600">Sistema Integral de Gestión Farmacéutica</p>
-          <div className="flex items-center justify-center mt-2 text-sm text-orange-600">
-            <span className="font-medium">Servicio Nacional de Aprendizaje - SENA</span>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            SIGFARMA-SENA
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Sistema Integral de Gestión Farmacéutica
+          </p>
+          <div className="flex items-center justify-center mt-2 text-sm text-orange-600 dark:text-orange-400">
+            <span className="font-medium">
+              Servicio Nacional de Aprendizaje - SENA
+            </span>
           </div>
         </div>
 
-        <Card className="border-0 shadow-xl">
+        <Card className="border border-border bg-card text-foreground shadow-xl transition-colors">
           <CardHeader className="text-center pb-4">
-            <CardTitle className="text-xl text-gray-900">Iniciar Sesión</CardTitle>
+            <CardTitle className="text-xl text-foreground">Iniciar Sesión</CardTitle>
             <CardDescription>
               Ingresa tus credenciales para acceder al sistema
             </CardDescription>
@@ -76,7 +82,7 @@ export function Login() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                <div className="flex items-center gap-2 p-3 rounded-lg text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {error}
                 </div>
@@ -110,7 +116,7 @@ export function Login() {
               
               <Button 
                 type="submit" 
-                className="w-full h-11 bg-orange-500 hover:bg-orange-600"
+                className="w-full h-11 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700"
                 disabled={loading}
               >
                 {loading ? 'Ingresando...' : 'Ingresar al Sistema'}
@@ -120,16 +126,23 @@ export function Login() {
         </Card>
 
         {/* Demo credentials */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="text-sm font-medium text-blue-900 mb-2">Credenciales de Demostración:</h3>
-          <div className="text-xs text-blue-700 space-y-1">
-            <div>👤 <strong>Administrador:</strong> admin@farmacia.com / admin123 <p className="text-xs text-blue-700 text-center">cambia la contraseña al iniciar sesión </p></div>
+        <div className="mt-6 p-4 rounded-lg border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-900/20">
+          <h3 className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-2">
+            Credenciales de Demostración:
+          </h3>
+          <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+            <div>
+              👤 <strong>Administrador:</strong> admin@farmacia.com / admin123
+              <p className="text-xs text-blue-700 dark:text-blue-400 text-center">
+                Cambia la contraseña al iniciar sesión
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="text-center mt-6 text-xs text-gray-500">
+        {/* Footer */}
+        <div className="text-center mt-6 text-xs text-gray-500 dark:text-gray-400">
           <p>© 2025 SENA - Todos los derechos reservados</p>
-          
         </div>
       </div>
     </div>
