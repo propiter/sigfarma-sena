@@ -22,7 +22,7 @@ export function QuickActionsCard() {
       description: 'Ingreso de inventario',
       icon: Package,
       color: 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700',
-      onClick: () => navigate('/inventory/reception'),
+      onClick: () => navigate('/reception'),
       roles: ['administrador', 'inventario']
     },
     {
