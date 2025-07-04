@@ -96,7 +96,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-3">
               <img 
-                src="/logo/logo.png" 
+                src="/logos/logo.png"
                 alt="Logo" 
                 className="h-8 w-auto"
               />
