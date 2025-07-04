@@ -799,7 +799,7 @@ export class InventoryController {
       });
 
       // Crear notificación para cada administrador
-      for (const admin of administrators) {
+      for (const _admin of administrators) {
         await prisma.notificacionReabastecimiento.create({
           data: {
             productoId: 1, // Temporal, necesitaríamos una tabla de notificaciones generales
@@ -825,7 +825,7 @@ export class InventoryController {
       });
 
       // Crear notificación para cada administrador
-      for (const admin of administrators) {
+      for (const _admin of administrators) {
         await prisma.notificacionReabastecimiento.create({
           data: {
             productoId: 1, // Temporal, necesitaríamos una tabla de notificaciones generales
@@ -840,7 +840,7 @@ export class InventoryController {
     }
   }
 
-  getExpiringLotes = async (req: AuthRequest, res: Response) => {
+  getExpiringLotes = async (_req: AuthRequest, res: Response) => {
     try {
       const now = new Date();
       const alertaRojaDias = 180;
@@ -882,7 +882,7 @@ export class InventoryController {
     }
   };
 
-  getLowStockProducts = async (req: AuthRequest, res: Response) => {
+  getLowStockProducts = async (_req: AuthRequest, res: Response) => {
     try {
       const products = await prisma.producto.findMany({
         where: {

@@ -14,14 +14,14 @@ Un sistema completo de punto de venta y gestión de inventario farmacéutico des
 
 ### **Windows:**
 ```bash
-git clone https://github.com/tu-usuario/sigfarma-sena.git
+git clone https://github.com/propiter/sigfarma-sena.git
 cd sigfarma-sena
 cmd /c setup.bat
 ```
 
 ### **Linux/Mac:**
 ```bash
-git clone https://github.com/tu-usuario/sigfarma-sena.git
+git clone https://github.com/propiter/sigfarma-sena.git
 cd sigfarma-sena
 chmod +x setup.sh
 ./setup.sh
