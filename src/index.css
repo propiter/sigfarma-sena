@@ -27,25 +27,31 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 22 100% 59%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 22 100% 59%;
+    --background: 220 16% 14%;           /* Gris oscuro azulado (#1c1f24) */
+    --foreground: 210 20% 90%;           /* Gris claro azulado */
+    --card: 220 16% 17%;                 /* Un poco más claro que el fondo */
+    --card-foreground: 210 20% 90%;
+    --popover: 220 16% 16%;
+    --popover-foreground: 210 20% 90%;
+  
+    --primary: 22 100% 59%;              /* Conservamos el naranja para destacar */
+    --primary-foreground: 0 0% 100%;     /* Blanco sobre botones naranjas */
+  
+    --secondary: 220 15% 22%;            /* Gris más suave */
+    --secondary-foreground: 210 20% 90%;
+  
+    --muted: 220 14% 20%;                /* Suave y consistente */
+    --muted-foreground: 210 16% 65%;
+  
+    --accent: 220 15% 25%;               /* Para elementos resaltados en paneles */
+    --accent-foreground: 210 20% 90%;
+  
+    --destructive: 0 72% 45%;            /* Rojo más tenue */
+    --destructive-foreground: 0 0% 100%;
+  
+    --border: 220 15% 25%;               /* Sutil pero visible */
+    --input: 220 15% 25%;
+    --ring: 22 100% 59%;                 /* Conservamos naranja como acento */
   }
 }
 
@@ -65,7 +71,7 @@
   }
   
   .sena-card {
-    @apply bg-card rounded-xl shadow-lg border-0 overflow-hidden;
+    @apply bg-card rounded-xl shadow-lg border border-border dark:border-[hsl(220_15%_30%)] overflow-hidden;
   }
   
   .sena-button {
