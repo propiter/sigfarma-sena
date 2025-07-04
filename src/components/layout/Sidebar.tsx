@@ -95,9 +95,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-orange-500 rounded-lg">
-                <Building2 className="w-5 h-5 text-white" />
-              </div>
+              <img 
+                src="/logo/logo.png" 
+                alt="Logo" 
+                className="h-8 w-auto"
+              />
               <div>
                 <div className="text-lg font-bold text-gray-900 dark:text-white">
                   {farmaciaName}
