@@ -208,9 +208,9 @@ docker-compose --version
 netstat -tulpn | grep :3000
 netstat -tulpn | grep :5432
 
-# Limpiar y reiniciar
+# Limpiar y reiniciar (Windows) borra todos los contenedores y base de datos
 docker-compose down -v
-docker system prune -f
+docker system prune -f  
 ./setup.sh  # o setup.bat en Windows
 ```
 
